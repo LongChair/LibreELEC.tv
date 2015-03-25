@@ -30,6 +30,27 @@ PKG_LONGDESC="Mesa is a 3-D graphics library with an API which is very similar t
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="yes"
 
+if [ "$DISPLAYSERVER" = "x11" ]; then
+  PKG_DEPENDS_TARGET="toolchain Python:host expat glproto dri2proto presentproto libdrm libXext libXdamage libXfixes libXxf86vm libxcb libX11 systemd dri3proto libxshmfence openssl"
+
+  export DRI_DRIVER_INSTALL_DIR=$XORG_PATH_DRI
+  export DRI_DRIVER_SEARCH_DIR=$XORG_PATH_DRI
+  export X11_INCLUDES=
+  MESA_DRI="--enable-dri --enable-dri3"
+  MESA_GLX="--enable-glx --enable-driglx-direct --enable-glx-tls"
+  MESA_EGL_PLATFORMS="--with-platforms=x11,drm"
+else
+  PKG_DEPENDS_TARGET="toolchain Python:host expat libdrm"
+  MESA_DRI="--enable-dri --disable-dri3"
+  MESA_GLX="--disable-glx --disable-driglx-direct --disable-glx-tls"
+  MESA_EGL_PLATFORMS="--with-platforms=drm"
+fi
+
+if [ "$DISPLAYSERVER" = "wayland" ]; then
+  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET wayland"
+  MESA_EGL_PLATFORMS="--with-egl-platforms=wayland,drm"
+fi
+
 # configure GPU drivers and dependencies:
   get_graphicdrivers
 
@@ -96,7 +117,6 @@ PKG_CONFIGURE_OPTS_TARGET="CC_FOR_BUILD=$HOST_CC \
                            --enable-glx-tls \
                            $MESA_GALLIUM_LLVM \
                            --disable-silent-rules \
-                           --with-gl-lib-name=GL \
                            --with-osmesa-lib-name=OSMesa \
                            --with-gallium-drivers=$GALLIUM_DRIVERS \
                            --with-dri-drivers=$DRI_DRIVERS \
