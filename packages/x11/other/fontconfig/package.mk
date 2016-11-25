@@ -70,7 +70,7 @@ pre_configure_host() {
 
     CFLAGS="-m32 -malign-double"
     CXXFLAGS="-m32 -malign-double"
-    LDFLAGS="-m32"
+    LDFLAGS="-m32 -L/usr/lib/i386-linux-gnu/"
   fi
 }
 
