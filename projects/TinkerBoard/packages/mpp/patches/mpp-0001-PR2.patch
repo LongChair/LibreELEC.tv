@@ -1,0 +1,136 @@
+From bbb0bf61832ea96b0c2cfc4dbbe29eafac2f7176 Mon Sep 17 00:00:00 2001
+From: LongChair <LongChair@hotmail.com>
+Date: Mon, 6 Mar 2017 19:12:29 +0000
+Subject: [PATCH] MPI : Add a block timeout control command.
+
+When retrieving frames current API only allows to define wether the API
+should block without any timeout or not block at all.
+This allows to specify a block timeout via the
+MPP_SET_OUTPUT_BLOCK_TIMEOUT control operation.
+---
+ inc/rk_mpi_cmd.h      |  1 +
+ mpp/common/mpp.h      |  1 +
+ mpp/mpp.cpp           |  9 ++++++++-
+ osal/inc/mpp_list.h   |  1 +
+ osal/inc/mpp_thread.h | 14 ++++++++++++++
+ osal/mpp_list.cpp     |  5 +++++
+ 6 files changed, 30 insertions(+), 1 deletion(-)
+
+diff --git a/inc/rk_mpi_cmd.h b/inc/rk_mpi_cmd.h
+index 941cdcc..da687d9 100644
+--- a/inc/rk_mpi_cmd.h
++++ b/inc/rk_mpi_cmd.h
+@@ -76,6 +76,7 @@ typedef enum {
+     MPP_ENABLE_DEINTERLACE,
+     MPP_SET_INPUT_BLOCK,
+     MPP_SET_OUTPUT_BLOCK,
++    MPP_SET_OUTPUT_BLOCK_TIMEOUT,
+     MPP_CMD_END,
+ 
+     MPP_CODEC_CMD_BASE                  = CMD_MODULE_CODEC,
+diff --git a/mpp/common/mpp.h b/mpp/common/mpp.h
+index e76be09..f520aa5 100644
+--- a/mpp/common/mpp.h
++++ b/mpp/common/mpp.h
+@@ -112,6 +112,7 @@ class Mpp
+ 
+     MppPollType     mInputBlock;
+     MppPollType     mOutputBlock;
++    int             mOutputBlockTimeout;
+     /*
+      * There are two threads for each decoder/encoder: codec thread and hal thread
+      *
+diff --git a/mpp/mpp.cpp b/mpp/mpp.cpp
+index b92e3ab..2659fa1 100644
+--- a/mpp/mpp.cpp
++++ b/mpp/mpp.cpp
+@@ -52,6 +52,7 @@ Mpp::Mpp()
+       mOutputTaskQueue(NULL),
+       mInputBlock(MPP_POLL_NON_BLOCK),
+       mOutputBlock(MPP_POLL_NON_BLOCK),
++      mOutputBlockTimeout(-1),
+       mThreadCodec(NULL),
+       mThreadHal(NULL),
+       mDec(NULL),
+@@ -270,7 +271,10 @@ MPP_RET Mpp::get_frame(MppFrame *frame)
+     if (0 == mFrames->list_size()) {
+         mThreadCodec->signal();
+         if (mOutputBlock == MPP_POLL_BLOCK)
+-            mFrames->wait();
++            if (mOutputBlockTimeout >= 0)
++                mFrames->wait(mOutputBlockTimeout);
++            else
++                mFrames->wait();
+         /* NOTE: this sleep is to avoid user's dead loop */
+         msleep(1);
+     }
+@@ -626,6 +630,9 @@ MPP_RET Mpp::control_mpp(MpiCmd cmd, MppParam param)
+         MppPollType block = *((MppPollType *)param);
+         mOutputBlock = block;
+     } break;
++    case MPP_SET_OUTPUT_BLOCK_TIMEOUT: {
++        mOutputBlockTimeout = *((int *)param);
++    } break;
+     default : {
+         ret = MPP_NOK;
+     } break;
+diff --git a/osal/inc/mpp_list.h b/osal/inc/mpp_list.h
+index b438e85..04743ed 100644
+--- a/osal/inc/mpp_list.h
++++ b/osal/inc/mpp_list.h
+@@ -68,6 +68,7 @@ class mpp_list
+     Mutex *mutex();
+ 
+     void wait();
++    void wait(int timeout);
+     void signal();
+ 
+ private:
+diff --git a/osal/inc/mpp_thread.h b/osal/inc/mpp_thread.h
+index ee01dea..c76d967 100644
+--- a/osal/inc/mpp_thread.h
++++ b/osal/inc/mpp_thread.h
+@@ -140,6 +140,7 @@ class Condition
+     ~Condition();
+     RK_S32 wait(Mutex& mutex);
+     RK_S32 wait(Mutex* mutex);
++    RK_S32 wait(Mutex& mutex, int timeout);
+     RK_S32 timedwait(Mutex& mutex, RK_S64 timeout);
+     RK_S32 timedwait(Mutex* mutex, RK_S64 timeout);
+     RK_S32 signal();
+@@ -164,6 +165,19 @@ inline RK_S32 Condition::wait(Mutex* mutex)
+ {
+     return pthread_cond_wait(&mCond, &mutex->mMutex);
+ }
++inline RK_S32 Condition::wait(Mutex& mutex, int timeout)
++{
++    struct timespec time;
++    clock_gettime(CLOCK_REALTIME, &time);
++
++    time.tv_nsec += timeout * 1000000;
++    if (time.tv_nsec >= 1E9)
++    {
++        time.tv_nsec -= 1E9;
++        time.tv_sec++;
++    }
++    return pthread_cond_timedwait(&mCond, &mutex.mMutex, &time);
++}
+ inline RK_S32 Condition::timedwait(Mutex& mutex, RK_S64 timeout)
+ {
+     struct timespec time;
+diff --git a/osal/mpp_list.cpp b/osal/mpp_list.cpp
+index 860d3fd..d0e06a2 100644
+--- a/osal/mpp_list.cpp
++++ b/osal/mpp_list.cpp
+@@ -274,6 +274,11 @@ void mpp_list::wait()
+     mCondition.wait(mMutex);
+ }
+ 
++void mpp_list::wait(int timeout)
++{
++    mCondition.wait(mMutex, timeout);
++}
++
+ void mpp_list::signal()
+ {
+     mCondition.signal();
