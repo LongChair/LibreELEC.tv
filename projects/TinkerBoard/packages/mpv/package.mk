@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="mpv"
-PKG_VERSION="7924492"
+PKG_VERSION="rockchip"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://mpv.io/"
@@ -32,6 +32,10 @@ PKG_AUTORECONF="no"
 
 PKG_CONFIGURE_OPTS_TARGET="--disable-libsmbclient --disable-apple-remote --prefix=/usr \
                            --enable-drm --enable-gbm --enable-egl-drm --enable-rkmpp"
+
+unpack() {
+   git clone -b $PKG_VERSION git@github.com:LongChair/mpv.git $BUILD/${PKG_NAME}-${PKG_VERSION}
+}
 
 post_unpack() {
   mkdir -p $ROOT/$PKG_BUILD/extraheaders
