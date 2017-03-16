@@ -1,0 +1,12 @@
+--- ./drivers/video/rockchip/vcodec/vcodec_service.old	2017-03-08 08:18:05.846095254 +0100
++++ ./drivers/video/rockchip/vcodec/vcodec_service.c	2017-03-08 08:18:36.112682492 +0100
+@@ -1183,8 +1183,7 @@
+ 			}
+ 		}
+ 		if (data->hw_id == HEVC_ID) {
+-			if (reg_probe_hevc_y_stride(reg) > 60000)
+-				reg->freq = VPU_FREQ_400M;
++			reg->freq = VPU_FREQ_600M;
+ 		}
+ 		if (reg->type == VPU_PP)
+ 			reg->freq = VPU_FREQ_400M;
