@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="mpp"
-PKG_VERSION="4f94b40"
+PKG_VERSION="for_linux"
 PKG_ARCH="any"
 PKG_LICENSE="APL"
 PKG_SITE="https://github.com/rockchip-linux/mpp"
