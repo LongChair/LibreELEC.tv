@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="ffmpeg"
-PKG_VERSION="7696202"
+PKG_VERSION="rockchip"
 PKG_ARCH="any"
 PKG_LICENSE="LGPLv2.1+"
 PKG_SITE="https://ffmpeg.org"
@@ -34,15 +34,15 @@ PKG_AUTORECONF="no"
 # Dependencies
 get_graphicdrivers
 
-PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET mpp"
-FFMPEG_VAAPI="--enable-rkmpp"
-
 if [ "$VAAPI_SUPPORT" = "yes" ]; then
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET libva-intel-driver"
   FFMPEG_VAAPI="--enable-vaapi"
 else
   FFMPEG_VAAPI="--disable-vaapi"
 fi
+
+PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET mpp"
+FFMPEG_VAAPI="--enable-rkmpp"
 
 if [ "$VDPAU_SUPPORT" = "yes" -a "$DISPLAYSERVER" = "x11" ]; then
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET libvdpau"
@@ -82,6 +82,10 @@ esac
 if [ "$DISPLAYSERVER" = "x11" ]; then
   FFMPEG_X11GRAB="--enable-indev=x11grab_xcb"
 fi
+
+unpack() {
+   git clone -b $PKG_VERSION git@github.com:LongChair/FFmpeg.git $BUILD/${PKG_NAME}-${PKG_VERSION}
+}
 
 pre_configure_target() {
   cd $ROOT/$PKG_BUILD
