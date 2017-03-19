@@ -56,6 +56,13 @@ else
   MESA_GALLIUM_LLVM="--disable-gallium-llvm"
 fi
 
+if [ "$VAAPI_SUPPORT" = "yes" ]; then
+  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET libva"
+  MESA_VAAPI="--enable-va"
+else
+  MESA_VAAPI="--disable-va"
+fi
+
 if [ "$VDPAU_SUPPORT" = "yes" -a "$DISPLAYSERVER" = "x11" ]; then
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET libvdpau"
   MESA_VDPAU="--enable-vdpau"
@@ -98,7 +105,7 @@ PKG_CONFIGURE_OPTS_TARGET="CC_FOR_BUILD=$HOST_CC \
                            --disable-xvmc \
                            $MESA_VDPAU \
                            --disable-omx \
-                           --disable-va \
+                           $MESA_VAAPI \
                            --disable-opencl \
                            --enable-opencl-icd \
                            --disable-gallium-tests \
@@ -116,6 +123,8 @@ PKG_CONFIGURE_OPTS_TARGET="CC_FOR_BUILD=$HOST_CC \
 pre_configure_target() {
   if [ "$DISPLAYSERVER" = "x11" ]; then
     export LIBS="-lxcb-dri3 -lxcb-present -lxcb-sync -lxshmfence -lz"
+  else
+    export LIBS="-lz"
   fi
 }
 

@@ -1,0 +1,63 @@
+diff -Naur a/configure.ac b/configure.ac
+--- a/configure.ac	2017-03-04 07:46:53.000000000 -0800
++++ b/configure.ac	2017-03-18 23:36:27.576632491 -0700
+@@ -1928,12 +1928,6 @@
+         "x$enable_vdpau" = xyes -o \
+         "x$enable_omx" = xyes -o \
+         "x$enable_va" = xyes; then
+-    if test x"$enable_dri3" = xyes; then
+-        PKG_CHECK_MODULES([VL], [xcb-dri3 xcb-present xcb-sync xshmfence >= $XSHMFENCE_REQUIRED
+-                                 xcb-xfixes x11-xcb xcb xcb-dri2 >= $XCBDRI2_REQUIRED])
+-    else
+-        PKG_CHECK_MODULES([VL], [x11-xcb xcb xcb-dri2 >= $XCBDRI2_REQUIRED])
+-    fi
+     need_gallium_vl_winsys=yes
+ fi
+ AM_CONDITIONAL(NEED_GALLIUM_VL_WINSYS, test "x$need_gallium_vl_winsys" = xyes)
+diff -Naur a/src/gallium/auxiliary/Makefile.sources b/src/gallium/auxiliary/Makefile.sources
+--- a/src/gallium/auxiliary/Makefile.sources	2017-03-04 07:46:53.000000000 -0800
++++ b/src/gallium/auxiliary/Makefile.sources	2017-03-18 23:34:04.733547533 -0700
+@@ -354,7 +354,6 @@
+ 
+ # XXX: Nuke this as our dri targets no longer depend on VL.
+ VL_WINSYS_SOURCES := \
+-	vl/vl_winsys_dri.c \
+ 	vl/vl_winsys_drm.c
+ 
+ VL_WINSYS_DRI3_SOURCES := \
+diff -Naur a/src/gallium/auxiliary/vl/vl_winsys.h b/src/gallium/auxiliary/vl/vl_winsys.h
+--- a/src/gallium/auxiliary/vl/vl_winsys.h	2017-03-04 07:46:53.000000000 -0800
++++ b/src/gallium/auxiliary/vl/vl_winsys.h	2017-03-18 23:43:06.036583150 -0700
+@@ -32,7 +32,6 @@
+ #ifndef vl_winsys_h
+ #define vl_winsys_h
+ 
+-#include <X11/Xlib.h>
+ #include "pipe/p_defines.h"
+ #include "pipe/p_format.h"
+ 
+@@ -69,9 +68,6 @@
+ };
+ 
+ struct vl_screen *
+-vl_dri2_screen_create(Display *display, int screen);
+-
+-struct vl_screen *
+ vl_drm_screen_create(int fd);
+ 
+ #if defined(HAVE_DRI3)
+diff -Naur a/src/gallium/state_trackers/va/context.c b/src/gallium/state_trackers/va/context.c
+--- a/src/gallium/state_trackers/va/context.c	2017-03-04 07:46:53.000000000 -0800
++++ b/src/gallium/state_trackers/va/context.c	2017-03-18 23:50:05.102213717 -0700
+@@ -121,11 +121,6 @@
+ #if defined(HAVE_DRI3)
+       drv->vscreen = vl_dri3_screen_create(ctx->native_dpy, ctx->x11_screen);
+ #endif
+-      if (!drv->vscreen)
+-         drv->vscreen = vl_dri2_screen_create(ctx->native_dpy, ctx->x11_screen);
+-      if (!drv->vscreen)
+-         goto error_screen;
+-      break;
+    case VA_DISPLAY_WAYLAND:
+    case VA_DISPLAY_DRM:
+    case VA_DISPLAY_DRM_RENDERNODES: {
