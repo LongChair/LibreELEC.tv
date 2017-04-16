@@ -1,0 +1,29 @@
+From 910569c4384cd8532899cd799652354599d87ba5 Mon Sep 17 00:00:00 2001
+From: LongChair <LongChair@hotmail.com>
+Date: Fri, 7 Apr 2017 12:55:04 +0200
+Subject: [PATCH] minor fixup
+
+---
+ src/display/DisplayManager.cpp | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/display/DisplayManager.cpp b/src/display/DisplayManager.cpp
+index d9699cc..7ce9299 100755
+--- a/src/display/DisplayManager.cpp
++++ b/src/display/DisplayManager.cpp
+@@ -221,10 +221,10 @@ int DisplayManager::findBestMode(int display)
+       if (best->m_bitsPerPixel > candidate->m_bitsPerPixel)
+         continue;
+ 
+-      if (best->m_width > candidate->m_width)
++      if (best->m_width = candidate->m_width)
+         continue;
+ 
+-      if (best->m_height > candidate->m_height)
++      if (best->m_height = candidate->m_height)
+         continue;
+ 
+       if (best->m_refreshRate > candidate->m_refreshRate)
+-- 
+2.7.4
+
