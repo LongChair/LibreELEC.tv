@@ -41,7 +41,7 @@ if [ "$DISPLAYSERVER" = "x11" ]; then
   QT_QPA_OPTS="-qpa xcb -opengl desktop -no-kms -no-directfb -qt-xcb"
 elif [ ! "$OPENGLES" = "no" ]; then
   PKG_QT_QPA="$OPENGLES libevdev libwebp"
-  QT_QPA_OPTS="-qpa eglfs -opengl es2 -no-kms -no-directfb -no-xcb"
+  QT_QPA_OPTS="-qpa eglfs -opengl es2 -no-directfb -no-xcb"
 fi
 
 # Combine packages
@@ -85,7 +85,12 @@ configure_target() {
   # Deploy the MKSPECS files for target
   if [ -d "${PKG_DIR}/mkspecs/${PROJECT}" ]; then
     mkdir -p $ROOT/$PKG_BUILD/qtbase/mkspecs/devices/$QT_MKSPECS_DEVICE
-    cp -R ${PKG_DIR}/mkspecs/${PROJECT}/* $ROOT/$PKG_BUILD/qtbase/mkspecs/devices/$QT_MKSPECS_DEVICE/
+    
+    if [ -d "${PKG_DIR}/mkspecs/${PROJECT}/${DEVICE}" ]; then
+       cp -R ${PKG_DIR}/mkspecs/${PROJECT}/${DEVICE}/* $ROOT/$PKG_BUILD/qtbase/mkspecs/devices/$QT_MKSPECS_DEVICE/
+    else
+       cp -R ${PKG_DIR}/mkspecs/${PROJECT}/* $ROOT/$PKG_BUILD/qtbase/mkspecs/devices/$QT_MKSPECS_DEVICE/
+    fi
   fi 
 
   # Add HW jpeg decoding
