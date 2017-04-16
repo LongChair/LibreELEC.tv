@@ -39,6 +39,10 @@ case $PROJECT in
     WeTek_Hub|Odroid_C2)
         PKG_VERSION="aml"
     ;;
+
+    Rockchip)
+        PKG_VERSION="rockchip"
+    ;;
 esac
 
 
@@ -64,10 +68,18 @@ fi
 unpack() {
   mkdir $BUILD/${PKG_NAME}-${PKG_VERSION}
   
-  git clone -b $PKG_VERSION git@github.com:wm4/mpv.git $BUILD/${PKG_NAME}-${PKG_VERSION}/.
+  case $PROJECT in
+    Rockchip)
+      git clone -b $PKG_VERSION git@github.com:LongChair/mpv.git $BUILD/${PKG_NAME}-${PKG_VERSION}/.
+    ;;
+
+    *)
+      git clone -b $PKG_VERSION git@github.com:wm4/mpv.git $BUILD/${PKG_NAME}-${PKG_VERSION}/.
+    ;;
+  esac
 
   case $PROJECT in
-    RPi|RPi2|Odroid_C2|WeTek_Hub)
+    RPi|RPi2|Odroid_C2|WeTek_Hub|Rockchip)
       # Before changing the subtitle renderer to EGL/GLES
       # These are needed on RPI only. Without, RPI output support
       # will not be compiled.
