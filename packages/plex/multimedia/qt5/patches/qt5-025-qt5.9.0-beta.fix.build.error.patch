@@ -1,0 +1,11 @@
+--- a/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms_egldevice/qeglfskmsegldevice.cpp	2017-04-19 11:29:56.440029391 +0200
++++ a/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms_egldevice/qeglfskmsegldevice.cpp	2017-04-19 11:30:26.786644916 +0200
+@@ -77,7 +77,7 @@
+     setFd(-1);
+ }
+ 
+-EGLNativeDisplayType QEglFSKmsEglDevice::nativeDisplay() const
++void *QEglFSKmsEglDevice::nativeDisplay() const
+ {
+     return reinterpret_cast<EGLNativeDisplayType>(m_devInt->eglDevice());
+ }

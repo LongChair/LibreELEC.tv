@@ -17,12 +17,12 @@
 #  ################################################################################
 
 PKG_NAME="qt5"
-PKG_VERSION="5.8.0"
+PKG_VERSION="5.9.0-beta3"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="OSS"
 PKG_SITE="https://nightlies.plex.tv"
-PKG_URL="http://download.qt.io/official_releases/qt/5.8/5.8.0/single/qt-everywhere-opensource-src-$PKG_VERSION.tar.gz"
+PKG_URL="http://download.qt.io/development_releases/qt/5.9/5.9.0-beta3/single/qt-everywhere-opensource-src-$PKG_VERSION.tar.xz"
 PKG_SOURCE_DIR="qt-everywhere-opensource-src-${PKG_VERSION}"
 PKG_PRIORITY="optional"
 PKG_SECTION="lib"
@@ -154,7 +154,7 @@ makeinstall_target() {
       rm -f  ${INSTALL}/usr/local/qt5/plugins/platforms/libqminimalegl.so
       rm -f  ${INSTALL}/usr/local/qt5/plugins/platforms/libqoffscreen.so
       rm -f  ${INSTALL}/usr/local/qt5/plugins/platforms/libqxcb.so
-      rm -f ${INSTALL}/usr/local/qt5/plugins/imageformats/libqjpeg*
+      rm -f  ${INSTALL}/usr/local/qt5/plugins/imageformats/libqjpeg*
     ;;
   esac
 
