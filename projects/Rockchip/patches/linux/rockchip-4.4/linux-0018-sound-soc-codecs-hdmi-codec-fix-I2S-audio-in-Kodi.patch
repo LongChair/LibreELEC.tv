@@ -1,0 +1,21 @@
+From de9edae174bd5ea046c221844c15844a488916bc Mon Sep 17 00:00:00 2001
+From: Jonas Karlman <jonas@kwiboo.se>
+Date: Tue, 2 May 2017 18:57:19 +0200
+Subject: [PATCH 18/18] sound/soc/codecs/hdmi-codec: fix I2S audio in Kodi
+
+---
+ sound/soc/codecs/hdmi-codec.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/sound/soc/codecs/hdmi-codec.c b/sound/soc/codecs/hdmi-codec.c
+index b30c03081756..66c497990cdf 100644
+--- a/sound/soc/codecs/hdmi-codec.c
++++ b/sound/soc/codecs/hdmi-codec.c
+@@ -750,7 +750,6 @@ static struct snd_soc_dai_driver hdmi_i2s_dai = {
+ 		.channels_max = 8,
+ 		.rates = HDMI_RATES,
+ 		.formats = I2S_FORMATS,
+-		.sig_bits = 24,
+ 	},
+ 	.ops = &hdmi_dai_ops,
+ 	.pcm_new = hdmi_codec_pcm_new,

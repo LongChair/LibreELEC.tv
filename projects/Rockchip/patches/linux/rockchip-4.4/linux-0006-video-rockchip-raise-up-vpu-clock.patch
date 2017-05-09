@@ -1,0 +1,23 @@
+From db14e717800aa12ba32ee8921df5d33de97100df Mon Sep 17 00:00:00 2001
+From: LongChair <LongChair@hotmail.com>
+Date: Sun, 26 Mar 2017 15:30:15 +0200
+Subject: [PATCH 06/18] video/rockchip: raise up vpu clock
+
+---
+ drivers/video/rockchip/vcodec/vcodec_service.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/video/rockchip/vcodec/vcodec_service.c b/drivers/video/rockchip/vcodec/vcodec_service.c
+index f8b6760e1de9..6b31f941c819 100644
+--- a/drivers/video/rockchip/vcodec/vcodec_service.c
++++ b/drivers/video/rockchip/vcodec/vcodec_service.c
+@@ -1190,8 +1190,7 @@ static void get_reg_freq(struct vpu_subdev_data *data, struct vpu_reg *reg)
+ 			}
+ 		}
+ 		if (data->hw_id == HEVC_ID) {
+-			if (reg_probe_hevc_y_stride(reg) > 60000)
+-				reg->freq = VPU_FREQ_400M;
++			reg->freq = VPU_FREQ_600M;
+ 		}
+ 		if (reg->type == VPU_PP)
+ 			reg->freq = VPU_FREQ_400M;
