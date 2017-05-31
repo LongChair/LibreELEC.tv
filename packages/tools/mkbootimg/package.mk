@@ -17,11 +17,12 @@
 ################################################################################
 
 PKG_NAME="mkbootimg"
-PKG_VERSION="6668fc2"
+PKG_VERSION="8492547"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
-PKG_SITE="https://android.googlesource.com/platform/system/core/+/master/mkbootimg/"
-PKG_URL="https://github.com/codesnake/mkbootimg/archive/$PKG_VERSION.tar.gz"
+PKG_SITE="https://source.codeaurora.org/quic/kernel/skales/"
+PKG_URL="https://source.codeaurora.org/quic/kernel/skales/snapshot/$PKG_VERSION.tar.xz"
+PKG_SOURCE_DIR="$PKG_VERSION*"
 PKG_DEPENDS_HOST=""
 PKG_SECTION="tools"
 PKG_SHORTDESC="mkbootimg: Creates kernel boot images for Android"
@@ -30,7 +31,11 @@ PKG_LONGDESC="mkbootimg: Creates kernel boot images for Android"
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
+make_host() {
+  sed "s|libfdt.so|$TOOLCHAIN/lib/libfdt.so|" -i dtbTool
+}
+
 makeinstall_host() {
-  mkdir -p $SYSROOT_PREFIX/usr/include
   cp mkbootimg $TOOLCHAIN/bin/
+  cp dtbTool $TOOLCHAIN/bin/
 }
