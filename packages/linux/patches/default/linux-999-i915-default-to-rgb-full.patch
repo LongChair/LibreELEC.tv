@@ -1,0 +1,54 @@
+commit 8ecdff7af2d1a1dd61087088264e8e4b5533d22b
+Author: Lukas Rusak <lorusak@gmail.com>
+Date:   Tue May 30 15:33:02 2017 -0700
+
+    drm/i915: add param to disable auto color range detection
+
+diff --git a/drivers/gpu/drm/i915/i915_params.c b/drivers/gpu/drm/i915/i915_params.c
+index 0e280fb..80be0dd 100644
+--- a/drivers/gpu/drm/i915/i915_params.c
++++ b/drivers/gpu/drm/i915/i915_params.c
+@@ -63,6 +63,7 @@ struct i915_params i915 __read_mostly = {
+ 	.inject_load_failure = 0,
+ 	.enable_dpcd_backlight = false,
+ 	.enable_gvt = false,
++	.disable_auto_color_range = false,
+ };
+ 
+ module_param_named(modeset, i915.modeset, int, 0400);
+@@ -243,3 +244,7 @@ MODULE_PARM_DESC(enable_dpcd_backlight,
+ module_param_named(enable_gvt, i915.enable_gvt, bool, 0400);
+ MODULE_PARM_DESC(enable_gvt,
+ 	"Enable support for Intel GVT-g graphics virtualization host support(default:false)");
++
++module_param_named(disable_auto_color_range, i915.disable_auto_color_range, bool, 0400);
++MODULE_PARM_DESC(disable_auto_color_range,
++	"Disable auto color range support (default:false)");
+diff --git a/drivers/gpu/drm/i915/i915_params.h b/drivers/gpu/drm/i915/i915_params.h
+index 8e433de..35fa46f 100644
+--- a/drivers/gpu/drm/i915/i915_params.h
++++ b/drivers/gpu/drm/i915/i915_params.h
+@@ -66,6 +66,7 @@ struct i915_params {
+ 	bool enable_dp_mst;
+ 	bool enable_dpcd_backlight;
+ 	bool enable_gvt;
++	bool disable_auto_color_range;
+ };
+ 
+ extern struct i915_params i915 __read_mostly;
+diff --git a/drivers/gpu/drm/i915/intel_dp.c b/drivers/gpu/drm/i915/intel_dp.c
+index d1670b8..b4d856f 100644
+--- a/drivers/gpu/drm/i915/intel_dp.c
++++ b/drivers/gpu/drm/i915/intel_dp.c
+@@ -5027,7 +5027,10 @@ intel_dp_add_properties(struct intel_dp *intel_dp, struct drm_connector *connect
+ 
+ 	intel_attach_force_audio_property(connector);
+ 	intel_attach_broadcast_rgb_property(connector);
+-	intel_dp->color_range_auto = true;
++	if (i915.disable_auto_color_range)
++		intel_dp->color_range_auto = false;
++	else
++		intel_dp->color_range_auto = true;
+ 
+ 	if (is_edp(intel_dp)) {
+ 		drm_mode_create_scaling_mode_property(connector->dev);
