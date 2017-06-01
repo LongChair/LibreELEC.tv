@@ -1,0 +1,14 @@
+diff --git a/xbmc/windowing/gbm/GBMUtils.cpp b/xbmc/windowing/gbm/GBMUtils.cpp
+index 523994e..6f356c6 100644
+--- a/xbmc/windowing/gbm/GBMUtils.cpp
++++ b/xbmc/windowing/gbm/GBMUtils.cpp
+@@ -381,7 +381,7 @@ bool CGBMUtils::GetPreferredMode()
+ 
+ bool CGBMUtils::InitDrm()
+ {
+-  const char *device = "/dev/dri/card0";
++  const char *device = "/dev/dri/card1";
+ 
+   m_drm->fd = open(device, O_RDWR);
+ 
+
