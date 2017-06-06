@@ -21,7 +21,7 @@ PKG_VERSION="5.4"
 PKG_ARCH="arm"
 PKG_LICENSE="other"
 PKG_SITE="http://www.freescale.com"
-PKG_URL="$DISTRO_SRC/$PKG_NAME-$PKG_VERSION.tar.xz"
+PKG_URL="http://download.ossystems.com.br/bsp/freescale/source/${PKG_NAME}-${PKG_VERSION}.bin"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_SECTION="linux-firmware"
 PKG_SHORTDESC="firmware-imx: Freescale IMX firmware"
@@ -29,6 +29,14 @@ PKG_LONGDESC="firmware-imx: Freescale IMX firmware such as for the VPU"
 
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
+
+unpack() {
+  mkdir -p $BUILD
+    cp $SOURCES/$PKG_NAME/$PKG_NAME-$PKG_VERSION.bin $BUILD/
+    cd $BUILD
+    sh $PKG_NAME-$PKG_VERSION.bin --auto-accept
+    rm $PKG_NAME-$PKG_VERSION.bin
+}
 
 make_target() {
   : # nothing todo here
