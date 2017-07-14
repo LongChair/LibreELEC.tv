@@ -107,9 +107,9 @@ pre_configure_target()
    export CONAN_USER_HOME=/data/conan
  fi
  
- $ROOT/$TOOLCHAIN/bin/python  "$ROOT/$TOOLCHAIN/bin/conan" remote add plex https://conan.plex.tv || true 
- $ROOT/$TOOLCHAIN/bin/python  "$ROOT/$TOOLCHAIN/bin/conan" user -r plex -p $CONAN_TOKEN plex
- $ROOT/$TOOLCHAIN/bin/python  "$ROOT/$TOOLCHAIN/bin/conan" install $ROOT/$PKG_BUILD -oinclude_desktop=False
+ $TOOLCHAIN/bin/python  "$TOOLCHAIN/bin/conan" remote add plex https://conan.plex.tv || true 
+ $TOOLCHAIN/bin/python  "$TOOLCHAIN/bin/conan" user -r plex -p $CONAN_TOKEN plex
+ $TOOLCHAIN/bin/python  "$TOOLCHAIN/bin/conan" install $PKG_BUILD -oinclude_desktop=False
 }
 
 pre_install()
@@ -120,10 +120,10 @@ pre_install()
 pre_make_target()
 {
   # Build the cmake toolchain file
-  cp  $PKG_DIR/toolchain.cmake $ROOT/$PKG_BUILD/
+  cp  $PKG_DIR/toolchain.cmake $PKG_BUILD/
   sed -e "s%@SYSROOT_PREFIX@%$SYSROOT_PREFIX%g" \
       -e "s%@TARGET_PREFIX@%$TARGET_PREFIX%g" \
-      -e "s%@PKG_BUILD_DIR@%$ROOT/$PKG_BUILD%g" \
+      -e "s%@PKG_BUILD_DIR@%$PKG_BUILD%g" \
       -e "s%@TARGET_CFLAGS@%$TARGET_CFLAGS%g" \
       -e "s%@TARGET_CXXFLAGS@%$TARGET_CXXFLAGS%g" \
       -e "s%@TARGET_LDFLAGS@%$TARGET_LDFLAGS%g" \
@@ -134,19 +134,19 @@ pre_make_target()
       -e "s%@COD_DISABLE_BUNDLE_DEPS@%$COD_DISABLE_BUNDLE_DEPS%g" \
       -e "s%@COD_OE_ARCH@%${PLEX_CODEC_ARCH}%g" \
       -e "s%@BUILD_TARGET@%${PMP_BUILD_TARGET}%g" \
-      -i $ROOT/$PKG_BUILD/toolchain.cmake
+      -i $PKG_BUILD/toolchain.cmake
 }
 
 makeinstall_target() {
   # deploy files
   mkdir -p $INSTALL/usr/bin
-  cp  $ROOT/$PKG_BUILD/.$TARGET_NAME/src/${MEDIACENTER,,} ${INSTALL}/usr/bin/
-  cp  $ROOT/$PKG_BUILD/.$TARGET_NAME/src/pmphelper ${INSTALL}/usr/bin/
+  cp  $PKG_BUILD/.$TARGET_NAME/src/${MEDIACENTER,,} ${INSTALL}/usr/bin/
+  cp  $PKG_BUILD/.$TARGET_NAME/src/pmphelper ${INSTALL}/usr/bin/
 
   mkdir -p $INSTALL/usr/share/${MEDIACENTER,,} $INSTALL/usr/share/${MEDIACENTER,,}/scripts
-  cp -R $ROOT/$PKG_BUILD/resources/* ${INSTALL}/usr/share/${MEDIACENTER,,}
+  cp -R $PKG_BUILD/resources/* ${INSTALL}/usr/share/${MEDIACENTER,,}
   cp $PKG_DIR/scripts/plex_update.sh ${INSTALL}/usr/share/${MEDIACENTER,,}/scripts/
-  cp -R $ROOT/$PKG_BUILD/.$TARGET_NAME/src/web-client* ${INSTALL}/usr/share/${MEDIACENTER,,}/
+  cp -R $PKG_BUILD/.$TARGET_NAME/src/web-client* ${INSTALL}/usr/share/${MEDIACENTER,,}/
 
  debug_strip $INSTALL/usr/bin
 }
@@ -170,7 +170,7 @@ post_install() {
   cp $PKG_DIR/system.d/network_wait $INSTALL/usr/share/plexmediaplayer/
 
   #echo "Generating pre-fontcache"
-  export FONTCONFIG_FILE=$ROOT/$BUILD/image/system/etc/fonts/fonts.conf
-  $ROOT/$TOOLCHAIN/bin/fc-cache -fv  -y ${ROOT}/${BUILD}/image/system /usr/share/fonts
+  export FONTCONFIG_FILE=$BUILD/image/system/etc/fonts/fonts.conf
+  $TOOLCHAIN/bin/fc-cache -fv  -y ${BUILD}/image/system /usr/share/fonts
 }
 

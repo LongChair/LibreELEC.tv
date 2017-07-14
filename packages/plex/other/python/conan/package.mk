@@ -38,7 +38,7 @@ make_host() {
 }
 
 makeinstall_host() {
-  python setup.py install --prefix=$ROOT/$TOOLCHAIN
+  python setup.py install --prefix=$TOOLCHAIN
 }
 
 pre_make_target() {

@@ -120,7 +120,7 @@ case $PROJECT in
 esac
 
 pre_configure_target() {
-  cd $ROOT/$PKG_BUILD
+  cd $PKG_BUILD
   rm -rf .$TARGET_NAME
 
 # ffmpeg fails building with LTO support
@@ -160,7 +160,7 @@ configure_target() {
               --disable-doc \
               $FFMPEG_DEBUG \
               $FFMPEG_PIC \
-              --pkg-config="$ROOT/$TOOLCHAIN/bin/pkg-config" \
+              --pkg-config="$TOOLCHAIN/bin/pkg-config" \
               --disable-armv5te --disable-armv6t2 \
               --disable-ffprobe \
               --disable-ffplay \

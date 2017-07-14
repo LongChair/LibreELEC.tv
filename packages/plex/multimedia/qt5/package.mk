@@ -59,7 +59,7 @@ fi
 # Define Qt build base options
 QT_BASE_OPTS="	-sysroot ${SYSROOT_PREFIX} \
 		-prefix /usr/local/qt5 \
-		-hostprefix ${ROOT}/${BUILD} \
+		-hostprefix ${BUILD} \
 		-device-option CROSS_COMPILE=${TARGET_PREFIX} \
 		-device ${QT_MKSPECS_DEVICE} \
 		-release -v -opensource \
@@ -84,18 +84,18 @@ configure_target() {
   
   # Deploy the MKSPECS files for target
   if [ -d "${PKG_DIR}/mkspecs/${PROJECT}" ]; then
-    mkdir -p $ROOT/$PKG_BUILD/qtbase/mkspecs/devices/$QT_MKSPECS_DEVICE
+    mkdir -p $PKG_BUILD/qtbase/mkspecs/devices/$QT_MKSPECS_DEVICE
     
     if [ -d "${PKG_DIR}/mkspecs/${PROJECT}/${DEVICE}" ]; then
-       cp -R ${PKG_DIR}/mkspecs/${PROJECT}/${DEVICE}/* $ROOT/$PKG_BUILD/qtbase/mkspecs/devices/$QT_MKSPECS_DEVICE/
+       cp -R ${PKG_DIR}/mkspecs/${PROJECT}/${DEVICE}/* $PKG_BUILD/qtbase/mkspecs/devices/$QT_MKSPECS_DEVICE/
     else
-       cp -R ${PKG_DIR}/mkspecs/${PROJECT}/* $ROOT/$PKG_BUILD/qtbase/mkspecs/devices/$QT_MKSPECS_DEVICE/
+       cp -R ${PKG_DIR}/mkspecs/${PROJECT}/* $PKG_BUILD/qtbase/mkspecs/devices/$QT_MKSPECS_DEVICE/
     fi
   fi 
 
   # Add HW jpeg decoding
   if [ -d "${PKG_DIR}/patches/${PROJECT}" ]; then
-    cp -R $PKG_DIR/patches/${PROJECT}/* ${ROOT}/${BUILD}/${PKG_NAME}-${PKG_VERSION}/qtwebengine/src/3rdparty/chromium/third_party/WebKit/Source/platform/image-decoders/
+    cp -R $PKG_DIR/patches/${PROJECT}/* ${BUILD}/${PKG_NAME}-${PKG_VERSION}/qtwebengine/src/3rdparty/chromium/third_party/WebKit/Source/platform/image-decoders/
 
     case $PROJECT in
       RPi|RPi2)
@@ -112,13 +112,13 @@ configure_target() {
   export QT_FORCE_PKGCONFIG=yes
   unset QMAKESPEC
 
-  cd ${ROOT}/${BUILD}/${PKG_NAME}-${PKG_VERSION}
+  cd ${BUILD}/${PKG_NAME}-${PKG_VERSION}
   ./configure ${PKG_CONFIGURE_OPTS}
 }
 
 makeinstall_target() {
   # deploy to SYSROOT
-  cd ${ROOT}/${BUILD}/${PKG_NAME}-${PKG_VERSION}
+  cd ${BUILD}/${PKG_NAME}-${PKG_VERSION}
   make install DESTDIR=${SYSROOT_PREFIX}/usr/local/qt5
 
   # Copy over to INSTALL directory
