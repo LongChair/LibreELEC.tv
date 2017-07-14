@@ -74,6 +74,6 @@ pre_configure_host() {
 }
 
 makeinstall_host() {
-  cp $ROOT/$PKG_BUILD/.$HOST_NAME/fc-cache/fc-cache $ROOT/$TOOLCHAIN/bin
+  cp $PKG_BUILD/.$HOST_NAME/fc-cache/fc-cache $TOOLCHAIN/bin
 }
 ### END PLEX

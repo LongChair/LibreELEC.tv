@@ -1,3 +1,4 @@
+
 ################################################################################
 #      This file is part of OpenELEC - http://www.openelec.tv
 #      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
@@ -35,12 +36,12 @@ PKG_AUTORECONF="no"
 PKG_CONFIGURE_OPTS_TARGET="CONFIG+=notests VERSION=5.6.1 PREFIX=${SYSROOT_PREFIX}/usr"
 
 configure_target() {
-  cd ${ROOT}/${BUILD}/${PKG_NAME}-${PKG_VERSION}
-  ${ROOT}/${BUILD}/bin/qmake $PKG_CONFIGURE_OPTS_TARGET	
+  cd ${BUILD}/${PKG_NAME}-${PKG_VERSION}
+  ${BUILD}/bin/qmake $PKG_CONFIGURE_OPTS_TARGET	
 }
 
 makeinstall_target() {
-  cd ${ROOT}/${BUILD}/${PKG_NAME}-${PKG_VERSION}
+  cd ${BUILD}/${PKG_NAME}-${PKG_VERSION}
   make install
   mkdir -p $INSTALL/usr/lib
   cp ${SYSROOT_PREFIX}/usr/lib/libconnman-qt5.so* $INSTALL/usr/lib

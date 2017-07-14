@@ -34,15 +34,15 @@ PKG_AUTORECONF="no"
 
 post_makeinstall_target() {
   mkdir -p ${SYSROOT_PREFIX}/usr/include/breakpad/google_breakpad/common/
-  cp $ROOT/$BUILD/${PKG_NAME}-${PKG_VERSION}/src/google_breakpad/common/*.h ${SYSROOT_PREFIX}/usr/include/breakpad/google_breakpad/common/
+  cp $BUILD/${PKG_NAME}-${PKG_VERSION}/src/google_breakpad/common/*.h ${SYSROOT_PREFIX}/usr/include/breakpad/google_breakpad/common/
 
   mkdir -p ${SYSROOT_PREFIX}/usr/include/breakpad/client/linux/
-  cp -R $ROOT/$BUILD/${PKG_NAME}-${PKG_VERSION}/src/client/linux/* ${SYSROOT_PREFIX}/usr/include/breakpad/client/linux/
+  cp -R $BUILD/${PKG_NAME}-${PKG_VERSION}/src/client/linux/* ${SYSROOT_PREFIX}/usr/include/breakpad/client/linux/
 
   mkdir -p ${SYSROOT_PREFIX}/usr/include/breakpad/common/
-  cp $ROOT/$BUILD/${PKG_NAME}-${PKG_VERSION}/src/common/*.h ${SYSROOT_PREFIX}/usr/include/breakpad/common/
+  cp $BUILD/${PKG_NAME}-${PKG_VERSION}/src/common/*.h ${SYSROOT_PREFIX}/usr/include/breakpad/common/
 
   mkdir -p ${SYSROOT_PREFIX}/usr/include/breakpad/third_party/lss
-  cp $ROOT/$BUILD/${PKG_NAME}-${PKG_VERSION}/src/third_party/lss/*.h ${SYSROOT_PREFIX}/usr/include/breakpad/third_party/lss
+  cp $BUILD/${PKG_NAME}-${PKG_VERSION}/src/third_party/lss/*.h ${SYSROOT_PREFIX}/usr/include/breakpad/third_party/lss
 }
 
