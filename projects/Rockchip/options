@@ -59,7 +59,7 @@
     UVESAFB_SUPPORT="no"
 
   # Displayserver to use (x11 / no)
-    DISPLAYSERVER="no"
+    DISPLAYSERVER="wayland"
 
   # Windowmanager to use (ratpoison / fluxbox / none)
     WINDOWMANAGER="none"
