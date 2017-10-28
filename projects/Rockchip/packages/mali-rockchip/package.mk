@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="mali-rockchip"
-PKG_VERSION="f2e1b3f"
+PKG_VERSION="796ef53"
 PKG_ARCH="arm aarch64"
 PKG_LICENSE="nonfree"
 PKG_SITE="https://github.com/rockchip-linux/libmali"
@@ -41,7 +41,11 @@ if [ "$TARGET_ARCH" = "arm" -a "$MALI_FAMILY" = "t760" ]; then
 elif [ "$TARGET_ARCH" = "aarch64" -a "$MALI_FAMILY" = "t860" ]; then
   LIBMALI_FILE="libmali-midgard-4th-r13p0-gbm.so"
 elif [ "$MALI_FAMILY" = "450" ]; then
-  LIBMALI_FILE="libmali-utgard-2th-r7p0-gbm.so"
+  if [ "$DISPLAYSERVER" = "wayland" ]; then
+    LIBMALI_FILE="libmali-utgard-450-r7p0-wayland.so"
+  else 
+    LIBMALI_FILE="libmali-utgard-2th-r7p0-gbm.so"
+  fi
 elif [ "$TARGET_ARCH" = "arm" -a "$MALI_FAMILY" = "400" ]; then
   LIBMALI_FILE="libmali-utgard-r7p0-gbm.so"
 else
@@ -83,6 +87,7 @@ makeinstall_target() {
     ln -sf $LIBMALI_FILE $INSTALL/usr/lib/libmali.so
     ln -sf libmali.so $INSTALL/usr/lib/libMali.so
     ln -sf libmali.so $INSTALL/usr/lib/libEGL.so
+    ln -sf libmali.so $INSTALL/usr/lib/libEGL.so.1
     ln -sf libmali.so $INSTALL/usr/lib/libGLESv2.so
     ln -sf libmali.so $INSTALL/usr/lib/libgbm.so
 
