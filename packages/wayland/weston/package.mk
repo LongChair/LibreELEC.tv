@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="weston"
-PKG_VERSION="2.0.0"
+PKG_VERSION="3.0.0"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="OSS"
@@ -43,13 +43,17 @@ PKG_CONFIGURE_OPTS_TARGET="CFLAGS=-DMESA_EGL_NO_X11_HEADERS \
                            --disable-fbdev-compositor \
                            --disable-rdp-compositor \
                            --disable-screen-sharing \
-                           --enable-vaapi-recorder \
                            --disable-headless-compositor \
                            --enable-systemd-login \
                            --disable-weston-launch \
                            --disable-fullscreen-shell \
                            --disable-demo-clients-install \
+                           --without-webp \
                            --enable-systemd-notify"
+
+if [ "$DISPLAYSERVER" != "x11" ]; then
+  PKG_DEPENDS_TARGET+=" libdrm"
+fi
 
 pre_configure_target() {
   export LIBS="-lturbojpeg"
