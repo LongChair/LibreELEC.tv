@@ -32,7 +32,12 @@ PKG_AUTORECONF="no"
 
 if [ "$OPENGLES" = "mali-rockchip" ]; then
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET libdrm"
-  GLMARK2_FLAVOR="--with-flavors=drm-glesv2"
+
+  if [ "$DISPLAYSERVER" = "wayland" ]; then
+    GLMARK2_FLAVOR="--with-flavors=wayland-glesv2"
+  else
+    GLMARK2_FLAVOR="--with-flavors=drm-glesv2"
+  fi
 elif [ "$OPENGLES" = "opengl-meson" ]; then
   GLMARK2_FLAVOR="--with-flavors=fbdev-glesv2 --for-mali"
 else
