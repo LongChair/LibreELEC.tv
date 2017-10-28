@@ -22,12 +22,12 @@
 # in Xorg.log
 
 PKG_NAME="libepoxy"
-PKG_VERSION="1.3.1"
+PKG_VERSION="1.4.3"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/anholt/libepoxy"
-PKG_URL="https://github.com/anholt/libepoxy/releases/download/v$PKG_VERSION/$PKG_NAME-$PKG_VERSION.tar.bz2"
-PKG_DEPENDS_TARGET="toolchain $OPENGL"
+PKG_URL="https://github.com/anholt/libepoxy/releases/download/$PKG_VERSION/$PKG_NAME-$PKG_VERSION.tar.xz"
+PKG_DEPENDS_TARGET="toolchain"
 PKG_SECTION="graphics"
 PKG_SHORTDESC="libepoxy: a library for handling OpenGL function pointer management for you."
 PKG_LONGDESC="Epoxy is a library for handling OpenGL function pointer management for you."
@@ -35,3 +35,14 @@ PKG_LONGDESC="Epoxy is a library for handling OpenGL function pointer management
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="yes"
 
+if [ "$OPENGL" != "no" ]; then
+  PKG_DEPENDS_TARGET+=" $OPENGL"
+fi
+
+if [ "$OPENGLES" != "no" ]; then
+  PKG_DEPENDS_TARGET+=" $OPENGLES"
+fi
+
+if [ "$DISPLAYSERVER" != "x11" ]; then 
+  PKG_CONFIGURE_OPTS_TARGET="--disable-glx"
+fi
