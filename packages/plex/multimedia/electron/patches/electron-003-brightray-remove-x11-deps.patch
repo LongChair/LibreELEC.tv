@@ -1,0 +1,13 @@
+diff --git a/brightray/brightray.gyp b/brightray/brightray.gyp
+index 909528ed1..ee44df628 100644
+--- a/brightray/brightray.gyp
++++ b/brightray/brightray.gyp
+@@ -1,7 +1,7 @@
+ {
+   'variables': {
+     # The libraries brightray will be compiled to.
+-    'linux_system_libraries': 'gtk+-3.0 dbus-1 x11 x11-xcb xcb xi xcursor xdamage xrandr xcomposite xext xfixes xrender xtst xscrnsaver gconf-2.0 gmodule-2.0 nss'
++    'linux_system_libraries': 'gtk+-3.0 dbus-1'
+   },
+   'includes': [
+     'filenames.gypi',

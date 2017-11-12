@@ -64,5 +64,6 @@ fi
 
 makeinstall_target() {
   #make install DESTDIR=$INSTALL SRC_SUBDIRS="gdk gtk modules"
+  make install DESTDIR=$SYSROOT_PREFIX
   make install DESTDIR=$INSTALL
 }

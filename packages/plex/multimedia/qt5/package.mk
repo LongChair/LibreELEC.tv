@@ -44,6 +44,10 @@ elif [ ! "$OPENGLES" = "no" ]; then
   QT_QPA_OPTS="-qpa eglfs -opengl es2 -no-directfb -no-xcb"
 fi
 
+if [ "$DISPLAYSERVER" != "wayland" ]; then
+  QT_QPA_OPTS="$QT_QPA_OPTS -skip qtwayland"
+fi
+
 # Combine packages
 PKG_DEPENDS_TARGET="$PKG_BASE_DEPENDS_TARGET $PKG_QT_AUDIO $PKG_QT_QPA"
 PKG_BASE_BUILD_DEPENDS_TARGET="$PKG_DEPENDS_TARGET"

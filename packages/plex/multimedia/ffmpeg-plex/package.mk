@@ -169,7 +169,8 @@ configure_target() {
               --build-suffix="" \
               --disable-static \
               --enable-shared \
-              --disable-version3 \
+              --enable-version3 \
+              --enable-libdrm \
               --disable-doc \
               $FFMPEG_DEBUG \
               $FFMPEG_PIC \

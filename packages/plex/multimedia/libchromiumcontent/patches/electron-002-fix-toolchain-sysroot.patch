@@ -1,0 +1,22 @@
+diff --git a/toolchain.gypi b/toolchain.gypi
+index 3c8e69235..8e9bc410f 100644
+--- a/toolchain.gypi
++++ b/toolchain.gypi
+@@ -53,7 +53,7 @@
+               'sysroot%': '<(source_root)/vendor/debian_jessie_arm-sysroot',
+             }],
+             ['target_arch=="arm64"', {
+-              'sysroot%': '<(source_root)/vendor/debian_jessie_arm64-sysroot',
++              'sysroot%': '<$(SYSROOT_PREFIX)',
+             }],
+             ['target_arch=="ia32"', {
+               'sysroot%': '<(source_root)/vendor/debian_jessie_i386-sysroot',
+@@ -149,7 +149,7 @@
+             ],
+             'ldflags': [
+               '--sysroot=<(sysroot)',
+-              '<!(<(source_root)/tools/linux/sysroot_ld_path.sh <(sysroot))',
++              '<$(SYSROOT_PREFIX)',
+             ],
+           }]
+         ],

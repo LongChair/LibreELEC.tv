@@ -23,7 +23,7 @@ PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://nightlies.plex.tv"
 PKG_URL="$PKG_SITE/directdl/plex-oe-sources/$PKG_NAME-dummy.tar.gz"
-PKG_DEPENDS_TARGET="toolchain libass qt5 libdrm alsa uchardet"
+PKG_DEPENDS_TARGET="toolchain libass libdrm alsa uchardet gtk+"
 PKG_PRIORITY="optional"
 PKG_SECTION="multimedia"
 PKG_SHORTDESC="MPV Movie Player
@@ -41,7 +41,7 @@ case $PROJECT in
     ;;
 
     Rockchip)
-        PKG_VERSION="rockchip"
+        PKG_VERSION="rockchip-atomic"
     ;;
 esac
 
