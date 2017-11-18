@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="conan"
-PKG_VERSION="0.22.2"
+PKG_VERSION="0.28.1"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
