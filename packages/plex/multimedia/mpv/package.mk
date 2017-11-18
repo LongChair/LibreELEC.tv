@@ -37,6 +37,10 @@ case $PROJECT in
     WeTek_Hub|Odroid_C2)
         PKG_VERSION="aml"
     ;;
+
+    Rockchip)
+        PKG_VERSION="rockchip"
+    ;;
 esac
 
 
