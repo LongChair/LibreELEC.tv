@@ -65,6 +65,10 @@ case $PROJECT in
   WeTek_Hub|Odroid_C2)
     PMP_BUILD_TARGET="AML"
   ;;
+
+  Rockchip)
+    PMP_BUILD_TARGET="ROCKCHIP"
+  ;;
 esac
 
 # generate debug symbols for this package
@@ -94,7 +98,14 @@ unpack() {
     git pull ; git reset --hard
   else
     rm -rf $BUILD/${PKG_NAME}-${PKG_VERSION}
-    git clone --depth 20 -b ${PLEX_PMP_BRANCH} git@github.com:plexinc/${PLEX_PMP_REPO}.git $BUILD/${PKG_NAME}-${PKG_VERSION}
+    case $PROJECT in 
+      Rockchip)
+        git clone --depth 20 -b rockchip git@github.com:LongChair/${PLEX_PMP_REPO}.git $BUILD/${PKG_NAME}-${PKG_VERSION}
+      ;;
+      *)
+        git clone --depth 20 -b ${PLEX_PMP_BRANCH} git@github.com:plexinc/${PLEX_PMP_REPO}.git $BUILD/${PKG_NAME}-${PKG_VERSION}
+      ;;
+    esac
   fi
 
   cd ${ROOT}	
