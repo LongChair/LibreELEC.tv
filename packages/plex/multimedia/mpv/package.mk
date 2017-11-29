@@ -47,7 +47,7 @@ if [ "$CODECS" = yes ]; then
 
   case $PROJECT in
     Generic)
-      PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET libva-intel-driver libvdpau"
+      PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET intel-vaapi-driver libvdpau"
     ;;
   esac 
 else
