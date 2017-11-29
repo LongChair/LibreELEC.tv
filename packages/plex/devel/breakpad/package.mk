@@ -17,12 +17,12 @@
 ################################################################################
 
 PKG_NAME="breakpad"
-PKG_VERSION="master"
+PKG_VERSION="70914b2"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="http://nightlies.plex.tv"
-PKG_URL="$PKG_SITE/directdl/plex-oe-sources/$PKG_NAME-$PKG_VERSION.tar.gz"
+PKG_URL="https://github.com/google/breakpad/archive/$PKG_VERSION.tar.gz"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_PRIORITY="optional"
 PKG_SECTION="system"
