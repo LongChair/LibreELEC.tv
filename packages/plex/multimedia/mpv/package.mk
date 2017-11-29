@@ -42,8 +42,6 @@ case $PROJECT in
 esac
 
 
-MPV_EXTRA_CFLAGS="-I$PWD/$BUILD/${PKG_NAME}-${PKG_VERSION}/extraheaders"
-
 # generate debug symbols for this package
 # if we want to
 DEBUG=$PLEX_DEBUG
@@ -64,15 +62,13 @@ fi
 unpack() {
   mkdir $BUILD/${PKG_NAME}-${PKG_VERSION}
   
-  git clone -b $PKG_VERSION git@github.com:wm4/mpv.git $BUILD/${PKG_NAME}-${PKG_VERSION}/.
-
   case $PROJECT in
-    RPi|RPi2|Odroid_C2|WeTek_Hub)
-      # Before changing the subtitle renderer to EGL/GLES
-      # These are needed on RPI only. Without, RPI output support
-      # will not be compiled.
-      mkdir $BUILD/${PKG_NAME}-${PKG_VERSION}/extraheaders || true
-      cp -r $PKG_DIR/GL/ $BUILD/${PKG_NAME}-${PKG_VERSION}/extraheaders
+    Rockchip)
+      git clone -b $PKG_VERSION git@github.com:LongChair/mpv.git $BUILD/${PKG_NAME}-${PKG_VERSION}/.
+    ;;
+
+    *)
+      git clone -b $PKG_VERSION git@github.com:mpv-player/mpv.git $BUILD/${PKG_NAME}-${PKG_VERSION}/.
     ;;
   esac
 }
@@ -80,7 +76,7 @@ unpack() {
 configure_target() {
   cd ${BUILD}/${PKG_NAME}-${PKG_VERSION}
   ./bootstrap.py
-  CFLAGS="$MPV_EXTRA_CFLAGS" ./waf configure ${PKG_CONFIGURE_OPTS_TARGET}
+  ./waf configure ${PKG_CONFIGURE_OPTS_TARGET}
 }
 
 make_target() {
