@@ -1,0 +1,13 @@
+diff --git a/qtwebengine/src/3rdparty/chromium/third_party/libvpx/BUILD.gn b/qtwebengine/src/3rdparty/chromium/third_party/libvpx/BUILD.gn
+index 2c79ee0..74ae1a9 100644
+--- a/qtwebengine/src/3rdparty/chromium/third_party/libvpx/BUILD.gn
++++ b/qtwebengine/src/3rdparty/chromium/third_party/libvpx/BUILD.gn
+@@ -303,6 +303,8 @@ static_library("libvpx") {
+       sources = libvpx_srcs_arm
+     }
+   } else if (current_cpu == "arm64") {
++    configs -= [ "//build/config/compiler:default_symbols" ]
++    configs += [ "//build/config/compiler:no_symbols" ]
+     sources = libvpx_srcs_arm64
+   }
+ 
