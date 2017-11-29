@@ -54,13 +54,13 @@ unpack() {
     ;;
 
     *)
-      git clone --depth 1 -b $PKG_VERSION git@github.com:FFmpeg/FFmpeg.git $BUILD/${PKG_NAME}-${PKG_VERSION}
+      git clone --depth 1 -b $PKG_VERSION git@github.com:mpv-player/ffmpeg-mpv.git $BUILD/${PKG_NAME}-${PKG_VERSION}
     ;;
   esac
 }
 
 if [ "$VAAPI_SUPPORT" = yes ]; then
-  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET libva-intel-driver"
+  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET intel-vaapi-driver"
   FFMPEG_VAAPI="--enable-vaapi"
 else
   FFMPEG_VAAPI="--disable-vaapi"
@@ -117,6 +117,10 @@ case $PROJECT in
   WeTek_Hub|Odroid_C2)
     FFMPEG_AML="--enable-aml"
   ;;
+
+  Rockchip)
+    FFMPEG_RKMPP="--enable-rkmpp --enable-libdrm"
+  ;;
 esac
 
 pre_configure_target() {
@@ -131,7 +135,7 @@ pre_configure_target() {
 }
 
 configure_target() {
-  ./configure --prefix=/usr \
+ ./configure  --prefix=/usr \
               --cpu=$TARGET_CPU \
               --arch=$TARGET_ARCH \
               --enable-cross-compile \
@@ -156,7 +160,7 @@ configure_target() {
               --build-suffix="" \
               --disable-static \
               --enable-shared \
-              --disable-version3 \
+              --enable-version3 \
               --disable-doc \
               $FFMPEG_DEBUG \
               $FFMPEG_PIC \
@@ -181,7 +185,11 @@ configure_target() {
               $FFMPEG_FPU \
               --disable-symver \
               $FFMPEG_AML \
-              $FFMPEG_MMAL
+              $FFMPEG_MMAL \
+              $FFMPEG_RKMPP \
+              --disable-decoder=aptx \
+              --disable-encoder=aptx
+
 }
 
 pre_install()
