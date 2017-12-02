@@ -29,9 +29,7 @@ PKG_PRIORITY="optional"
 PKG_SECTION="system"
 PKG_SHORTDESC="Conan.io - The open-source C/C++ package manager"
 PKG_LONGDESC="Conan.io - The open-source C/C++ package manager"
-
-PKG_IS_ADDON="no"
-PKG_AUTORECONF="no"
+PKG_TOOLCHAIN="manual"
 
 make_host() {
  : # nothing todo

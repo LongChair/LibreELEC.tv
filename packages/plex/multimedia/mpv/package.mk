@@ -28,9 +28,7 @@ PKG_PRIORITY="optional"
 PKG_SECTION="multimedia"
 PKG_SHORTDESC="MPV Movie Player
 PKG_LONGDESC="
-
-PKG_IS_ADDON="no"
-PKG_AUTORECONF="no"
+PKG_TOOLCHAIN="manual"
 
 PKG_CONFIGURE_OPTS_TARGET="--enable-libmpv-shared --disable-libsmbclient --disable-apple-remote --prefix=${SYSROOT_PREFIX}/usr"
 
