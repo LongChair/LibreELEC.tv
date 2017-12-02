@@ -27,11 +27,7 @@ PKG_DEPENDS_TARGET="toolchain"
 PKG_SECTION="wayland"
 PKG_SHORTDESC="Specifications of extended Wayland protocols"
 PKG_LONGDESC="Specifications of extended Wayland protocols"
-PKG_AUTORECONF="yes"
-
-pre_makeinstall_target() {
-  sed "s|prefix=/usr|prefix=$SYSROOT_PREFIX/usr|" -i wayland-protocols.pc
-}
+PKG_TOOLCHAIN="autotools"
 
 post_makeinstall_target() {
   rm -rf $INSTALL
