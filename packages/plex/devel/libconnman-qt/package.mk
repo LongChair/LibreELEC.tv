@@ -29,9 +29,7 @@ PKG_PRIORITY="optional"
 PKG_SECTION="multimedia"
 PKG_SHORTDESC="Library for DBUS connman interaction
 PKG_LONGDESC="
-
-PKG_IS_ADDON="no"
-PKG_AUTORECONF="no"
+PKG_TOOLCHAIN="manual"
 
 PKG_CONFIGURE_OPTS_TARGET="CONFIG+=notests VERSION=5.6.1 PREFIX=${SYSROOT_PREFIX}/usr"
 

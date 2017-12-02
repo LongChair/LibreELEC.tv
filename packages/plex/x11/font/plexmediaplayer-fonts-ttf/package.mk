@@ -28,9 +28,7 @@ PKG_PRIORITY="optional"
 PKG_SECTION="x11/fonts"
 PKG_SHORTDESC="Plex Mediacenter fonts"
 PKG_LONGDESC="Plex Mediacenter fonts"
-
-PKG_IS_ADDON="no"
-PKG_AUTORECONF="no"
+PKG_TOOLCHAIN="manual"
 
 make_target() {
   : # nothing to make
