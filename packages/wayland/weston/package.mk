@@ -27,7 +27,7 @@ PKG_DEPENDS_TARGET="toolchain libinput cairo-weston libjpeg-turbo wayland-protoc
 PKG_SECTION="wayland"
 PKG_SHORTDESC="Reference implementation of a Wayland compositor"
 PKG_LONGDESC="Reference implementation of a Wayland compositor"
-PKG_AUTORECONF="yes"
+PKG_TOOLCHAIN="autotools"
 
 PKG_CONFIGURE_OPTS_TARGET="CFLAGS=-DMESA_EGL_NO_X11_HEADERS \
                            --with-cairo-glesv2 \
