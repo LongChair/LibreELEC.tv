@@ -43,9 +43,10 @@ else
   MESA_EGL_PLATFORMS="--with-platforms=drm"
 fi
 
-if [ "$DISPLAYSERVER" = "wayland" ]; then
+if [ "$DISPLAYSERVER" = "weston" ]; then
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET wayland"
   MESA_EGL_PLATFORMS="--with-egl-platforms=wayland,drm"
+  MESA_PLATFORMS="--with-platforms=drm,wayland"
 fi
 
 # configure GPU drivers and dependencies:
