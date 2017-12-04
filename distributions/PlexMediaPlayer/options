@@ -24,7 +24,7 @@
   GLIBC_LOCALES="yes"
 
 # Mediacenter to use (kodi / no)
-  MEDIACENTER="plexmediaplayer"
+  MEDIACENTER="mpv"
 
 # Skins to install (Estuary)
 # Space separated list is supported,
