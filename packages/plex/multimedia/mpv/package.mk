@@ -23,7 +23,7 @@ PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://nightlies.plex.tv"
 PKG_URL="$PKG_SITE/directdl/plex-oe-sources/$PKG_NAME-dummy.tar.gz"
-PKG_DEPENDS_TARGET="toolchain libass qt5 libdrm alsa uchardet"
+PKG_DEPENDS_TARGET="toolchain libass libdrm alsa uchardet wayland-weston"
 PKG_PRIORITY="optional"
 PKG_SECTION="multimedia"
 PKG_SHORTDESC="MPV Movie Player
@@ -65,13 +65,10 @@ unpack() {
   mkdir $BUILD/${PKG_NAME}-${PKG_VERSION}
   
   case $PROJECT in
-    Rockchip)
+    *)
       git clone -b $PKG_VERSION git@github.com:LongChair/mpv.git $BUILD/${PKG_NAME}-${PKG_VERSION}/.
     ;;
 
-    *)
-      git clone -b $PKG_VERSION git@github.com:mpv-player/mpv.git $BUILD/${PKG_NAME}-${PKG_VERSION}/.
-    ;;
   esac
 }
 

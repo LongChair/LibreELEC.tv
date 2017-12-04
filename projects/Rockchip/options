@@ -52,7 +52,7 @@
     UVESAFB_SUPPORT="no"
 
   # Displayserver to use (weston / no)
-    DISPLAYSERVER="no"
+    DISPLAYSERVER="weston"
 
   # Windowmanager to use (ratpoison / fluxbox / none)
     WINDOWMANAGER="none"
