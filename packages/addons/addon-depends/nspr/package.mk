@@ -19,7 +19,7 @@
 ################################################################################
 
 PKG_NAME="nspr"
-PKG_VERSION="4.13.1"
+PKG_VERSION="4.17"
 PKG_ARCH="any"
 PKG_LICENSE="Mozilla Public License"
 PKG_SITE="http://www.linuxfromscratch.org/blfs/view/svn/general/nspr.html"
@@ -31,7 +31,7 @@ PKG_TOOLCHAIN="configure"
 
 MAKEFLAGS=-j1
 
-if [ "$TARGET_ARCH" = "x86_64" ] ; then
+if [ "$TARGET_ARCH" = "x86_64" -o "$TARGET_ARCH" = "aarch64" ] ; then
   TARGET_USE_64="--enable-64bit"
 fi
 
