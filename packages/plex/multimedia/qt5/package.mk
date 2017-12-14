@@ -17,13 +17,13 @@
 #  ################################################################################
 
 PKG_NAME="qt5"
-PKG_VERSION="5.9"
-PKG_REV="2"
+PKG_VERSION="5.10"
+PKG_REV="0"
 PKG_ARCH="any"
 PKG_LICENSE="OSS"
 PKG_SITE="https://nightlies.plex.tv"
-PKG_URL="http://download.qt.io/official_releases/qt/$PKG_VERSION/$PKG_VERSION.$PKG_REV/single/qt-everywhere-opensource-src-$PKG_VERSION.$PKG_REV.tar.xz"
-PKG_SOURCE_DIR="qt-everywhere-opensource-src-${PKG_VERSION}.${PKG_REV}"
+PKG_URL="http://download.qt.io/official_releases/qt/$PKG_VERSION/$PKG_VERSION.$PKG_REV/single/qt-everywhere-src-$PKG_VERSION.$PKG_REV.tar.xz"
+PKG_SOURCE_DIR="qt-everywhere-src-${PKG_VERSION}.${PKG_REV}"
 PKG_PRIORITY="optional"
 PKG_SECTION="lib"
 PKG_SHORTDESC="Qt GUI toolkit"
@@ -32,7 +32,7 @@ PKG_LONGDESC="Qt GUI toolkit"
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
-PKG_BASE_DEPENDS_TARGET="curl bzip2 Python2 zlib:host zlib libpng tiff dbus glib fontconfig glibc flex bison ruby libdrm atk"
+PKG_BASE_DEPENDS_TARGET="curl bzip2 Python2 zlib:host zlib libpng tiff dbus glib fontconfig glibc flex bison ruby libdrm atk nss"
 PKG_BASE_BUILD_DEPENDS_TARGET="bzip2 Python2 zlib:host zlib libpng tiff dbus glib fontconfig openssl linux-headers glibc pulseaudio"
 
 # determine QPA related packages
