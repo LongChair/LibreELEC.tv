@@ -39,7 +39,7 @@ case $PROJECT in
     ;;
 
     Rockchip)
-        PKG_VERSION="rockchip"
+        PKG_VERSION="master"
     ;;
 esac
 
@@ -70,12 +70,17 @@ unpack() {
     ;;
 
   esac
+
+  cd  $BUILD/${PKG_NAME}-${PKG_VERSION}/
+  git remote add upstream https://github.com/mpv-player/mpv.git
+  git fetch upstream
+  cd  $BUILD
 }
 
 configure_target() {
   cd ${BUILD}/${PKG_NAME}-${PKG_VERSION}
   ./bootstrap.py
-  ./waf configure ${PKG_CONFIGURE_OPTS_TARGET}
+  CFLAGS="-g3 -ggdb" ./waf configure ${PKG_CONFIGURE_OPTS_TARGET}
 }
 
 make_target() {
