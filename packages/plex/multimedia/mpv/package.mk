@@ -32,6 +32,13 @@ PKG_TOOLCHAIN="manual"
 
 PKG_CONFIGURE_OPTS_TARGET="--enable-libmpv-shared --disable-libsmbclient --disable-apple-remote --prefix=${SYSROOT_PREFIX}/usr"
 
+# Temporarilly use another branch & repo for Rockchip devices
+case $PROJECT in
+    Rockchip)
+        PKG_VERSION="rockchip"
+    ;;
+esac
+
 # ensure we get proper debug info on mpv
 CFLAGS="-g3 -ggdb"
 
@@ -54,8 +61,16 @@ fi
 
 unpack() {
   mkdir $BUILD/${PKG_NAME}-${PKG_VERSION}
-  
-  git clone -b $PKG_VERSION git@github.com:plexinc/mpv.git $BUILD/${PKG_NAME}-${PKG_VERSION}/.
+
+  case $PROJECT in
+    Rockchip)
+      git clone -b $PKG_VERSION git@github.com:LongChair/mpv.git $BUILD/${PKG_NAME}-${PKG_VERSION}/.
+    ;;
+
+    *)
+      git clone -b $PKG_VERSION git@github.com:plexinc/mpv.git $BUILD/${PKG_NAME}-${PKG_VERSION}/.
+    ;;
+  esac
 
   cd  $BUILD/${PKG_NAME}-${PKG_VERSION}/
   git remote add upstream https://github.com/mpv-player/mpv.git
