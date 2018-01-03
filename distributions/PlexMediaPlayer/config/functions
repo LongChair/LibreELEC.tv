@@ -31,11 +31,8 @@ deploy_symbols() {
   fi
 }
 
-# override show_config to have our infor printed out
-eval "original_$(declare -f show_config)"
-show_config() {
-  original_show_config
- 
+# define  show_distro_config to have our infor printed out
+show_distro_config() {
   # Add out config here
    dashes="==========================="
   plex_config="$plex_config\n $dashes$dashes$dashes"
@@ -49,8 +46,8 @@ show_config() {
   plex_config="$plex_config\n - PMP Version:\t\t\t\t $PLEX_PMP_VERSION"
 
   #Codecs options
-  plex_config="$plex_config\n - Codec build:\t\t\t\t $CODECS"
-  if [ $CODECS = "yes" ]; then
+  plex_config="$plex_config\n - Codec build:\t\t\t\t ${CODECS:-No}"
+  if [ "$CODECS" = "yes" ]; then
     plex_config="$plex_config\n - Codecs arch:\t\t\t\t $PLEX_CODEC_ARCH"
     plex_config="$plex_config\n - Codecs version :\t\t\t $PLEX_CODEC_VERSION"
     plex_config="$plex_config\n - Codecs hash :\t\t\t $PLEX_CODEC_HASH"
