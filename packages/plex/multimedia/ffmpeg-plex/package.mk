@@ -40,8 +40,20 @@ get_graphicdrivers
 # if we want to
 DEBUG=$PLEX_DEBUG
 
+case $PROJECT in
+  Rockchip)
+    PKG_DEPENDS_TARGET="${PKG_DEPENDS_TARGET} rkmpp"
+    PKG_VERSION="master"
+    FFMPEG_EXTRAS="--enable-rkmpp"
+  ;;
+esac
+
 unpack() {
   case $PROJECT in
+    Rockchip)
+      git clone -b $PKG_VERSION git@github.com:LongChair/FFmpeg.git $BUILD/${PKG_NAME}-${PKG_VERSION}
+    ;;
+
     *)
       git clone --depth 1 -b $PKG_VERSION git@github.com:FFmpeg/FFmpeg.git $BUILD/${PKG_NAME}-${PKG_VERSION}
     ;;
@@ -135,7 +147,8 @@ configure_target() {
               --build-suffix="" \
               --disable-static \
               --enable-shared \
-              --disable-version3 \
+              --enable-version3 \
+              --enable-libdrm \
               --disable-doc \
               $FFMPEG_DEBUG \
               $FFMPEG_PIC \
