@@ -65,6 +65,7 @@ configure_host() {
 
 makeinstall_host() {
   make INSTALL_PREFIX=$TOOLCHAIN install_sw
+  rm -rf $PKG_BUILD/.$HOST_NAME
 }
 
 pre_configure_target() {
