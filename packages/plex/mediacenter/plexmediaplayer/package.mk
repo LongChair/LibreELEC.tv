@@ -151,6 +151,10 @@ post_install() {
   #copy out network wait file 
   cp $PKG_DIR/system.d/network_wait $INSTALL/usr/share/plexmediaplayer/
 
+  #copy kms configuration file
+  mkdir -p $INSTALL/usr/share/plexmediaplayer/config
+  cp $PKG_DIR/config/kms.json $INSTALL/usr/share/plexmediaplayer/config/
+
   #echo "Generating pre-fontcache"
   export FONTCONFIG_FILE=$BUILD/image/system/etc/fonts/fonts.conf
   $TOOLCHAIN/bin/fc-cache -fv  -y ${BUILD}/image/system /usr/share/fonts
