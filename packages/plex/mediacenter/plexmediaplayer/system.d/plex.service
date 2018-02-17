@@ -7,6 +7,7 @@ Requires=graphical.target
 Environment=DISPLAY=:0.0
 Environment=SDL_MOUSE_RELATIVE=0
 Environment=HOME=/storage
+ExecStartPre=/bin/sh -c "if [ ! -f /storage/.local/share/plexmediaplayer/kms.json ]; then mkdir -p /storage/.local/share/plexmediaplayer/ ; cp /usr/share/plexmediaplayer/config/kms.json /storage/.local/share/plexmediaplayer/; fi"
 ExecStartPre=/bin/sh -c "rm -f /storage/.local/share/plexmediaplayer/plexmediaplayer.conf.* /storage/.local/share/plexmediaplayer/plexmediaplayer.pid"
 ExecStartPre=/bin/sh -c "mkdir -p /storage/.cache/fontconfig/; rm /storage/.cache/fontconfig/* ; cp -p /usr/share/plexmediaplayer/fc-cache/* /storage/.cache/fontconfig/"
 ExecStartPre=/bin/sh -c "value=$(grep -c RPi2.arm /etc/os-release) ; if [ $value -gt 0 ]; then /sbin/fbset -g 1 1 1 1 32 ; fi"
