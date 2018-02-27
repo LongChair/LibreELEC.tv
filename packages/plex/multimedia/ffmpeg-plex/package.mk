@@ -55,7 +55,8 @@ unpack() {
     ;;
 
     *)
-      git clone --depth 1 -b $PKG_VERSION git@github.com:FFmpeg/FFmpeg.git $BUILD/${PKG_NAME}-${PKG_VERSION}
+      #git clone --depth 1 -b $PKG_VERSION git@github.com:FFmpeg/FFmpeg.git $BUILD/${PKG_NAME}-${PKG_VERSION}
+      git clone -b $PKG_VERSION git@github.com:LongChair/FFmpeg.git $BUILD/${PKG_NAME}-${PKG_VERSION}
     ;;
   esac
 }
@@ -154,9 +155,7 @@ configure_target() {
               $FFMPEG_PIC \
               --pkg-config="$TOOLCHAIN/bin/pkg-config" \
               --disable-armv5te --disable-armv6t2 \
-              --disable-ffprobe \
               --disable-ffplay \
-              --disable-ffserver \
               --disable-devices \
               --enable-gnutls  \
               $FFMPEG_VAAPI \
