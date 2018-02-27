@@ -97,7 +97,8 @@ unpack() {
         git clone --depth 20 -b rockchip git@github.com:LongChair/${PLEX_PMP_REPO}.git $BUILD/${PKG_NAME}-${PKG_VERSION}
       ;;
       *)
-        git clone --depth 20 -b ${PLEX_PMP_BRANCH} git@github.com:plexinc/${PLEX_PMP_REPO}.git $BUILD/${PKG_NAME}-${PKG_VERSION}
+        #git clone --depth 20 -b ${PLEX_PMP_BRANCH} git@github.com:plexinc/${PLEX_PMP_REPO}.git $BUILD/${PKG_NAME}-${PKG_VERSION}
+        git clone --depth 20 -b rockchip git@github.com:LongChair/${PLEX_PMP_REPO}.git $BUILD/${PKG_NAME}-${PKG_VERSION}
       ;;
     esac
   fi
