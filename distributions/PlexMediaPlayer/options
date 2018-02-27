@@ -208,7 +208,9 @@ DISTRO_DEPS_PKG="python-pip"
 			-skip qtscript -skip qtsensors -skip qtserialport -skip qtcanvas3d\
 			-skip qtwayland -skip qtwinextras -skip qtserialbus\
 			-skip qtxmlpatterns -skip qttranslations -skip qtmultimedia -skip qtscxml\
-			-skip qtquickcontrols2 -skip qt3d -skip qtpurchasing -skip qtgamepad -skip qtwebview" 
+			-skip qtquickcontrols2 -skip qt3d -skip qtpurchasing -skip qtgamepad -skip qtwebview \
+			-skip qtconnectivity -skip qtspeech -skip qtremoteobjects -skip qttools\
+			-no-feature-quick-particles -no-feature-webengine-spellchecker -no-feature-webengine-printing-and-pdf" 
 
   QT_EXTRA_FLAGS=--force-debug-info
 

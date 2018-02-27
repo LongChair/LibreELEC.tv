@@ -1,0 +1,104 @@
+From d146dd4639f2bce07ad16ee4a93a94d99ac25dec Mon Sep 17 00:00:00 2001
+From: Michal Klocek <michal.klocek@qt.io>
+Date: Fri, 15 Dec 2017 17:52:47 +0100
+Subject: [PATCH] WIP: Add pkg-host wrapper script
+
+Currently we use pkg-config host for cross-builds. Unfortunately
+if build environment exports PKG_CONFIG_* variables pkg-config
+will pick them up also for host builds, which can lead to compile
+errors. Create pkg-config-host_wrapper which explicitly unsets
+PKG_CONFIG_* variables.
+
+Task-number: QTBUG-65079
+Change-Id: I9aff4a27ba62e096ed4c023cf022a41833260178
+---
+ configure.json            | 13 +++++++++++++
+ configure.pri             | 11 +++++++++++
+ src/core/config/linux.pri | 18 +++++++++++++++++-
+ 3 files changed, 41 insertions(+), 1 deletion(-)
+
+diff --git a/configure.json b/configure.json
+index 398df0ce93..295b28b560 100644
+--- a/qtwebengine/configure.json
++++ b/qtwebengine/configure.json
+@@ -223,6 +223,11 @@
+             "type": "detectPython2",
+             "log": "location"
+         },
++        "webengine-host-pkg-config": {
++            "label": "host pkg-config",
++            "type": "detectHostPkgConfig",
++            "log": "path"
++        },
+         "webengine-gperf": {
+             "label": "gperf",
+             "type": "detectGperf"
+@@ -355,6 +360,14 @@
+                 { "type": "varAssign", "name": "QMAKE_PYTHON2", "value": "tests.webengine-python2.location" }
+             ]
+         },
++        "webengine-host-pkg-config": {
++            "label": "host-pkg-config",
++            "condition": "tests.webengine-host-pkg-config",
++            "output": [
++                "privateFeature",
++                { "type": "varAssign", "name": "QMAKE_PKG_CONFIG_HOST", "value": "tests.webengine-host-pkg-config.path" }
++            ]
++        },
+         "webengine-gperf": {
+             "label": "gperf",
+             "condition": "tests.webengine-gperf",
+diff --git a/configure.pri b/configure.pri
+index e0e4826852..7e5c4d89ff 100644
+--- a/qtwebengine/configure.pri
++++ b/qtwebengine/configure.pri
+@@ -157,6 +157,17 @@ defineTest(qtConfTest_detectIcuuc) {
+    return(false)
+ }
+ 
++defineTest(qtConfTest_detectHostPkgConfig) {
++
++   PKG_CONFIG = $$qtConfPkgConfig()
++   qtLog("Found host pkg-config: $$PKG_CONFIG")
++   $${1}.path = $$PKG_CONFIG
++   export($${1}.path)
++   $${1}.cache += path
++   export($${1}.cache)
++   return(true)
++}
++
+ defineTest(qtConfTest_isSanitizerSupported) {
+   sanitizer_combo_supported = true
+   sanitize_address {
+diff --git a/src/core/config/linux.pri b/src/core/config/linux.pri
+index 6f7b27f103..73907f163b 100644
+--- a/qtwebengine/src/core/config/linux.pri
++++ b/qtwebengine/src/core/config/linux.pri
+@@ -113,7 +113,23 @@ host_build {
+         PKGCONFIG = $$first($$list($$pkgConfigExecutable()))
+         gn_args += pkg_config=\"$$PKGCONFIG\"
+         PKG_CONFIG_HOST = $$(GN_PKG_CONFIG_HOST)
+-        isEmpty(PKG_CONFIG_HOST): PKG_CONFIG_HOST = pkg-config
++        pkgConfigLibdir = $$(PKG_CONFIG_LIBDIR)
++        pkgConfigSysrootDir = $$(PKG_CONFIG_SYSROOT_DIR)
++
++        isEmpty(PKG_CONFIG_HOST): PKG_CONFIG_HOST = $$QMAKE_PKG_CONFIG_HOST
++        isEmpty(PKG_CONFIG_HOST)|!isEmpty(pkgConfigLibdir)|!isEmpty(pkgConfigLibdir){
++            batch_name = pkg-config-host_wrapper.sh
++            batch_sets = "unset PKG_CONFIG_LIBDIR"
++            batch_sets += "unset PKG_CONFIG_SYSROOT_DIR"
++            batch_cmd = pkg-config
++            batch_cont = \
++                "$$LITERAL_HASH!/bin/sh" \
++                $$batch_sets \
++                "exec $$batch_cmd \"$@\""
++            !build_pass:!write_file($$OUT_PWD/$$batch_name, batch_cont, exe): error()
++            QMAKE_DISTCLEAN += $$OUT_PWD/$$batch_name
++            PKG_CONFIG_HOST =  $$system_quote($$system_path($$OUT_PWD/$$batch_name))
++        }
+         gn_args += host_pkg_config=\"$$PKG_CONFIG_HOST\"
+     }
+ 
+-- 
+2.14.1
+
