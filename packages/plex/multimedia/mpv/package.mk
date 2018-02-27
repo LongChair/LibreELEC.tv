@@ -37,6 +37,9 @@ case $PROJECT in
     Rockchip)
         PKG_VERSION="rockchip"
     ;;
+    *)
+        PKG_VERSION="rockchip"
+    ;;
 esac
 
 # ensure we get proper debug info on mpv
@@ -68,7 +71,8 @@ unpack() {
     ;;
 
     *)
-      git clone -b $PKG_VERSION git@github.com:plexinc/mpv.git $BUILD/${PKG_NAME}-${PKG_VERSION}/.
+      #git clone -b $PKG_VERSION git@github.com:plexinc/mpv.git $BUILD/${PKG_NAME}-${PKG_VERSION}/.
+      git clone -b $PKG_VERSION git@github.com:LongChair/mpv.git $BUILD/${PKG_NAME}-${PKG_VERSION}/.
     ;;
   esac
 
