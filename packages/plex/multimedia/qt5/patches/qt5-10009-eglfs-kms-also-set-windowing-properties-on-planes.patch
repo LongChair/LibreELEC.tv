@@ -1,0 +1,68 @@
+From 2f7dc98fdba523eb46eb86b97568d18b6cfd1277 Mon Sep 17 00:00:00 2001
+From: Lionel CHAZALLON <longchair@hotmail.com>
+Date: Sat, 7 Apr 2018 10:36:05 +0200
+Subject: [PATCH] eglfs/kms: also set windowing properties on planes.
+
+The 0 values should be default for X,Y both on plane and crtc.
+But atomic implementation can have flaws on some devices so
+we don't assume they are defaulted right and set them to 0.
+---
+ src/platformsupport/kmsconvenience/qkmsdevice.cpp                 | 8 ++++++++
+ src/platformsupport/kmsconvenience/qkmsdevice_p.h                 | 4 ++++
+ .../eglfs/deviceintegration/eglfs_kms/qeglfskmsgbmscreen.cpp      | 4 ++++
+ 3 files changed, 16 insertions(+)
+
+diff --git a/qtbase/src/platformsupport/kmsconvenience/qkmsdevice.cpp b/qtbase/src/platformsupport/kmsconvenience/qkmsdevice.cpp
+index c383f51472..d477d12d72 100644
+--- a/qtbase/src/platformsupport/kmsconvenience/qkmsdevice.cpp
++++ b/qtbase/src/platformsupport/kmsconvenience/qkmsdevice.cpp
+@@ -816,6 +816,14 @@ void QKmsDevice::discoverPlanes()
+                 plane.crtcwidthPropertyId = prop->prop_id;
+             } else if (!strcasecmp(prop->name, "crtc_h")) {
+                 plane.crtcheightPropertyId = prop->prop_id;
++            } else if (!strcasecmp(prop->name, "src_x")) {
++                plane.srcXPropertyId = prop->prop_id;
++            } else if (!strcasecmp(prop->name, "src_y")) {
++                plane.srcYPropertyId = prop->prop_id;
++            } else if (!strcasecmp(prop->name, "crtc_x")) {
++                plane.crtcXPropertyId = prop->prop_id;
++            } else if (!strcasecmp(prop->name, "crtc_y")) {
++                plane.crtcYPropertyId = prop->prop_id;
+             }
+         });
+ 
+diff --git a/qtbase/src/platformsupport/kmsconvenience/qkmsdevice_p.h b/qtbase/src/platformsupport/kmsconvenience/qkmsdevice_p.h
+index 9737be9800..5465cad941 100644
+--- a/qtbase/src/platformsupport/kmsconvenience/qkmsdevice_p.h
++++ b/qtbase/src/platformsupport/kmsconvenience/qkmsdevice_p.h
+@@ -169,6 +169,10 @@ struct QKmsPlane
+     uint32_t rotationPropertyId = 0;
+     uint32_t crtcPropertyId = 0;
+     uint32_t framebufferPropertyId = 0;
++    uint32_t srcXPropertyId = 0;
++    uint32_t srcYPropertyId = 0;
++    uint32_t crtcXPropertyId = 0;
++    uint32_t crtcYPropertyId = 0;
+     uint32_t srcwidthPropertyId = 0;
+     uint32_t srcheightPropertyId = 0;
+     uint32_t crtcwidthPropertyId = 0;
+diff --git a/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms/qeglfskmsgbmscreen.cpp b/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms/qeglfskmsgbmscreen.cpp
+index 679d1f0069..c3151e1fd0 100644
+--- a/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms/qeglfskmsgbmscreen.cpp
++++ b/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms/qeglfskmsgbmscreen.cpp
+@@ -301,8 +301,12 @@ void QEglFSKmsGbmScreen::flip()
+             drmModeAtomicAddProperty(request, op.eglfs_plane->id, op.eglfs_plane->crtcPropertyId, op.crtc_id);
+             drmModeAtomicAddProperty(request, op.eglfs_plane->id, op.eglfs_plane->srcwidthPropertyId,
+                                      output().size.width() << 16);
++            drmModeAtomicAddProperty(request, op.eglfs_plane->id, op.eglfs_plane->srcXPropertyId, 0);
++            drmModeAtomicAddProperty(request, op.eglfs_plane->id, op.eglfs_plane->srcYPropertyId, 0);
+             drmModeAtomicAddProperty(request, op.eglfs_plane->id, op.eglfs_plane->srcheightPropertyId,
+                                      output().size.height() << 16);
++            drmModeAtomicAddProperty(request, op.eglfs_plane->id, op.eglfs_plane->crtcXPropertyId, 0);
++            drmModeAtomicAddProperty(request, op.eglfs_plane->id, op.eglfs_plane->crtcYPropertyId, 0);
+             drmModeAtomicAddProperty(request, op.eglfs_plane->id, op.eglfs_plane->crtcwidthPropertyId,
+                                      m_output.modes[m_output.mode].hdisplay);
+             drmModeAtomicAddProperty(request, op.eglfs_plane->id, op.eglfs_plane->crtcheightPropertyId,
+-- 
+2.16.2
+

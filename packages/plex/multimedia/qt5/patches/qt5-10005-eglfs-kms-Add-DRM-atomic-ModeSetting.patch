@@ -1,0 +1,165 @@
+From be015ef27d0233e6f0e7ea25a88462f4fdb31764 Mon Sep 17 00:00:00 2001
+From: Lionel CHAZALLON <longchair@hotmail.com>
+Date: Thu, 8 Mar 2018 08:19:04 +0100
+Subject: [PATCH] eglfs/kms: Add DRM atomic ModeSetting
+
+This patch will allow to set the video mode with DRM atomic API when available.
+
+Using Atomic ModeSetting will allow further to enable framebuffer upscaling which is
+something not possible with DRM legacy API or at least not supported on all devices
+in a reliable way.
+
+Change-Id: Ie340585cf4cbf5d65555c9a7c547dcbadb327fc0
+Reviewed-by: Laszlo Agocs <laszlo.agocs@qt.io>
+---
+ src/platformsupport/kmsconvenience/qkmsdevice.cpp  | 48 +++++++++++++++++++++-
+ src/platformsupport/kmsconvenience/qkmsdevice_p.h  |  7 ++++
+ .../eglfs_kms/qeglfskmsgbmscreen.cpp               | 34 ++++++++++-----
+ 3 files changed, 77 insertions(+), 12 deletions(-)
+
+diff --git a/qtbase/src/platformsupport/kmsconvenience/qkmsdevice.cpp b/qtbase/src/platformsupport/kmsconvenience/qkmsdevice.cpp
+index 2378856768..22033f58d9 100644
+--- a/qtbase/src/platformsupport/kmsconvenience/qkmsdevice.cpp
++++ b/qtbase/src/platformsupport/kmsconvenience/qkmsdevice.cpp
+@@ -386,6 +386,16 @@ QPlatformScreen *QKmsDevice::createScreenForConnector(drmModeResPtr resources,
+     output.drm_format = drmFormat;
+     output.clone_source = cloneSource;
+ 
++#if QT_CONFIG(drm_atomic)
++    if (drmModeCreatePropertyBlob(m_dri_fd, &modes[selected_mode], sizeof(drmModeModeInfo),
++                                  &output.mode_blob_id) != 0) {
++        qCDebug(qLcKmsDebug) << "Failed to create mode blob for mode" << selected_mode;
++    }
++
++    parseConnectorProperties(output.connector_id, &output);
++    parseCrtcProperties(output.crtc_id, &output);
++#endif
++
+     QString planeListStr;
+     for (const QKmsPlane &plane : qAsConst(m_planes)) {
+         if (plane.possibleCrtcs & (1 << output.crtc_index)) {
+@@ -817,7 +827,7 @@ bool QKmsDevice::atomicCommit(void *user_data)
+ {
+     if (m_atomic_request) {
+         int ret = drmModeAtomicCommit(m_dri_fd, m_atomic_request,
+-                          DRM_MODE_ATOMIC_NONBLOCK | DRM_MODE_PAGE_FLIP_EVENT, user_data);
++                          DRM_MODE_ATOMIC_NONBLOCK | DRM_MODE_PAGE_FLIP_EVENT | DRM_MODE_ATOMIC_ALLOW_MODESET, user_data);
+ 
+         if (ret) {
+            qWarning("Failed to commit atomic request (code=%d)", ret);
+@@ -842,6 +852,42 @@ void QKmsDevice::atomicReset()
+ }
+ #endif
+ 
++void QKmsDevice::parseConnectorProperties(uint32_t connectorId, QKmsOutput *output)
++{
++    drmModeObjectPropertiesPtr objProps = drmModeObjectGetProperties(m_dri_fd, connectorId, DRM_MODE_OBJECT_CONNECTOR);
++    if (!objProps) {
++        qCDebug(qLcKmsDebug, "Failed to query connector %d object properties", connectorId);
++        return;
++    }
++
++    enumerateProperties(objProps, [output](drmModePropertyPtr prop, quint64 value) {
++        Q_UNUSED(value);
++        if (!strcasecmp(prop->name, "crtc_id"))
++            output->crtcIdPropertyId = prop->prop_id;
++    });
++
++    drmModeFreeObjectProperties(objProps);
++}
++
++void QKmsDevice::parseCrtcProperties(uint32_t crtcId, QKmsOutput *output)
++{
++    drmModeObjectPropertiesPtr objProps = drmModeObjectGetProperties(m_dri_fd, crtcId, DRM_MODE_OBJECT_CRTC);
++    if (!objProps) {
++        qCDebug(qLcKmsDebug, "Failed to query crtc %d object properties", crtcId);
++        return;
++    }
++
++    enumerateProperties(objProps, [output](drmModePropertyPtr prop, quint64 value) {
++        Q_UNUSED(value)
++        if (!strcasecmp(prop->name, "mode_id"))
++            output->modeIdPropertyId = prop->prop_id;
++        else if (!strcasecmp(prop->name, "active"))
++            output->activePropertyId = prop->prop_id;
++    });
++
++    drmModeFreeObjectProperties(objProps);
++}
++
+ QKmsScreenConfig *QKmsDevice::screenConfig() const
+ {
+     return m_screenConfig;
+diff --git a/qtbase/src/platformsupport/kmsconvenience/qkmsdevice_p.h b/qtbase/src/platformsupport/kmsconvenience/qkmsdevice_p.h
+index c7692d12ee..2210ef479d 100644
+--- a/qtbase/src/platformsupport/kmsconvenience/qkmsdevice_p.h
++++ b/qtbase/src/platformsupport/kmsconvenience/qkmsdevice_p.h
+@@ -195,6 +195,11 @@ struct QKmsOutput
+     QString clone_source;
+     QVector<QKmsPlane> available_planes;
+     struct QKmsPlane *eglfs_plane = nullptr;
++    uint32_t crtcIdPropertyId = 0;
++    uint32_t modeIdPropertyId = 0;
++    uint32_t activePropertyId = 0;
++
++    uint32_t mode_blob_id = 0;
+ 
+     void restoreMode(QKmsDevice *device);
+     void cleanup(QKmsDevice *device);
+@@ -255,6 +260,8 @@ protected:
+     typedef std::function<void(drmModePropertyPtr, quint64)> PropCallback;
+     void enumerateProperties(drmModeObjectPropertiesPtr objProps, PropCallback callback);
+     void discoverPlanes();
++    void parseConnectorProperties(uint32_t connectorId, QKmsOutput *output);
++    void parseCrtcProperties(uint32_t crtcId, QKmsOutput *output);
+ 
+     QKmsScreenConfig *m_screenConfig;
+     QString m_path;
+diff --git a/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms/qeglfskmsgbmscreen.cpp b/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms/qeglfskmsgbmscreen.cpp
+index f16869c009..e773e85433 100644
+--- a/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms/qeglfskmsgbmscreen.cpp
++++ b/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms/qeglfskmsgbmscreen.cpp
+@@ -211,17 +211,29 @@ void QEglFSKmsGbmScreen::ensureModeSet(uint32_t fb)
+ 
+         if (doModeSet) {
+             qCDebug(qLcEglfsKmsDebug, "Setting mode for screen %s", qPrintable(name()));
+-            int ret = drmModeSetCrtc(fd,
+-                                     op.crtc_id,
+-                                     fb,
+-                                     0, 0,
+-                                     &op.connector_id, 1,
+-                                     &op.modes[op.mode]);
+-
+-            if (ret == 0)
+-                setPowerState(PowerStateOn);
+-            else
+-                qErrnoWarning(errno, "Could not set DRM mode for screen %s", qPrintable(name()));
++
++            if (device()->hasAtomicSupport()) {
++#if QT_CONFIG(drm_atomic)
++                drmModeAtomicReq *request = device()->atomic_request();
++                if (request) {
++                    drmModeAtomicAddProperty(request, op.connector_id, op.crtcIdPropertyId, op.crtc_id);
++                    drmModeAtomicAddProperty(request, op.crtc_id, op.modeIdPropertyId, op.mode_blob_id);
++                    drmModeAtomicAddProperty(request, op.crtc_id, op.activePropertyId, 1);
++                }
++#endif
++            } else {
++                int ret = drmModeSetCrtc(fd,
++                                         op.crtc_id,
++                                         fb,
++                                         0, 0,
++                                         &op.connector_id, 1,
++                                         &op.modes[op.mode]);
++
++                if (ret == 0)
++                    setPowerState(PowerStateOn);
++                else
++                    qErrnoWarning(errno, "Could not set DRM mode for screen %s", qPrintable(name()));
++            }
+         }
+     }
+ }
+-- 
+2.16.2
+

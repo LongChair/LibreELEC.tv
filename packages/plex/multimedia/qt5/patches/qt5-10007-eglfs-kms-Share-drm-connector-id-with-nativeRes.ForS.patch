@@ -1,0 +1,30 @@
+From a263655f9197e92101d33cb02de99c243531aecf Mon Sep 17 00:00:00 2001
+From: Lionel CHAZALLON <longchair@hotmail.com>
+Date: Sat, 17 Mar 2018 08:28:44 +0100
+Subject: [PATCH] eglfs/kms: Share drm connector id with nativeRes.ForScreen
+
+This allows to share the connector id for external applications
+and drm layers embedding.
+
+Change-Id: I87d4c257c8d8600665eb2328f8b44df3f1ac3c0a
+Reviewed-by: Laszlo Agocs <laszlo.agocs@qt.io>
+---
+ .../eglfs/deviceintegration/eglfs_kms_support/qeglfskmsintegration.cpp  | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms_support/qeglfskmsintegration.cpp b/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms_support/qeglfskmsintegration.cpp
+index d79a0fa515..a6aac61506 100644
+--- a/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms_support/qeglfskmsintegration.cpp
++++ b/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms_support/qeglfskmsintegration.cpp
+@@ -151,6 +151,8 @@ void *QEglFSKmsIntegration::nativeResourceForScreen(const QByteArray &resource,
+     if (s) {
+         if (resource == QByteArrayLiteral("dri_crtcid"))
+             return (void *) (qintptr) s->output().crtc_id;
++        if (resource == QByteArrayLiteral("dri_connectorid"))
++            return (void *) (qintptr) s->output().connector_id;
+     }
+     return nullptr;
+ }
+-- 
+2.16.2
+

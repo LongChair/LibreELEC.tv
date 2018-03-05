@@ -1,0 +1,60 @@
+From bf1119673cfdb260f8c15707830ace633fe9e3e9 Mon Sep 17 00:00:00 2001
+From: Lionel CHAZALLON <longchair@hotmail.com>
+Date: Sat, 7 Apr 2018 10:41:38 +0200
+Subject: [PATCH] eglfs/kms: Add drm atomic zpos property handling
+
+This adds the ability to specify a ZPOS property for the eglfs plane
+ZPOS will allow to control the relative position between eglfs layer
+and the other layers.
+
+It is bound to using QT_QPA_EGLFS_KMS_ZPOS envrionement variable to determine
+its value.
+---
+ src/platformsupport/kmsconvenience/qkmsdevice.cpp                     | 2 ++
+ src/platformsupport/kmsconvenience/qkmsdevice_p.h                     | 1 +
+ .../eglfs/deviceintegration/eglfs_kms/qeglfskmsgbmscreen.cpp          | 4 ++++
+ 3 files changed, 7 insertions(+)
+
+diff --git a/qtbase/src/platformsupport/kmsconvenience/qkmsdevice.cpp b/qtbase/src/platformsupport/kmsconvenience/qkmsdevice.cpp
+index d477d12d72..71422b469b 100644
+--- a/qtbase/src/platformsupport/kmsconvenience/qkmsdevice.cpp
++++ b/qtbase/src/platformsupport/kmsconvenience/qkmsdevice.cpp
+@@ -824,6 +824,8 @@ void QKmsDevice::discoverPlanes()
+                 plane.crtcXPropertyId = prop->prop_id;
+             } else if (!strcasecmp(prop->name, "crtc_y")) {
+                 plane.crtcYPropertyId = prop->prop_id;
++            } else if (!strcasecmp(prop->name, "zpos")) {
++                plane.zposPropertyId = prop->prop_id;
+             }
+         });
+ 
+diff --git a/qtbase/src/platformsupport/kmsconvenience/qkmsdevice_p.h b/qtbase/src/platformsupport/kmsconvenience/qkmsdevice_p.h
+index 5465cad941..403972fbb8 100644
+--- a/qtbase/src/platformsupport/kmsconvenience/qkmsdevice_p.h
++++ b/qtbase/src/platformsupport/kmsconvenience/qkmsdevice_p.h
+@@ -177,6 +177,7 @@ struct QKmsPlane
+     uint32_t srcheightPropertyId = 0;
+     uint32_t crtcwidthPropertyId = 0;
+     uint32_t crtcheightPropertyId = 0;
++    uint32_t zposPropertyId = 0;
+ };
+ 
+ Q_DECLARE_OPERATORS_FOR_FLAGS(QKmsPlane::Rotations)
+diff --git a/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms/qeglfskmsgbmscreen.cpp b/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms/qeglfskmsgbmscreen.cpp
+index c3151e1fd0..33cd1a15a5 100644
+--- a/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms/qeglfskmsgbmscreen.cpp
++++ b/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms/qeglfskmsgbmscreen.cpp
+@@ -311,6 +311,10 @@ void QEglFSKmsGbmScreen::flip()
+                                      m_output.modes[m_output.mode].hdisplay);
+             drmModeAtomicAddProperty(request, op.eglfs_plane->id, op.eglfs_plane->crtcheightPropertyId,
+                                      m_output.modes[m_output.mode].vdisplay);
++
++            int zpos = qEnvironmentVariableIntValue("QT_QPA_EGLFS_KMS_ZPOS");
++            if (zpos)
++                drmModeAtomicAddProperty(request, op.eglfs_plane->id, op.eglfs_plane->zposPropertyId, zpos);
+         }
+ #endif
+     } else {
+-- 
+2.16.2
+

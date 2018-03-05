@@ -1,0 +1,34 @@
+From e97311ad750807db94cac69db728da03d1c59837 Mon Sep 17 00:00:00 2001
+From: Lionel CHAZALLON <longchair@hotmail.com>
+Date: Sat, 20 Jan 2018 10:48:55 +0100
+Subject: [PATCH] eglfs/kms: Share atomic request with nativeRes.ForIntegration
+
+This allows to share the atomic request so that applications can blend content
+into overlays within the same renderloop.
+
+atomic request will allow several planes update in the same commit.
+
+Change-Id: I762ea96499765ced573e287dbd52d53c64ec7c74
+Reviewed-by: Laszlo Agocs <laszlo.agocs@qt.io>
+---
+ .../deviceintegration/eglfs_kms_support/qeglfskmsintegration.cpp      | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms_support/qeglfskmsintegration.cpp b/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms_support/qeglfskmsintegration.cpp
+index 06bc272050..d79a0fa515 100644
+--- a/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms_support/qeglfskmsintegration.cpp
++++ b/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms_support/qeglfskmsintegration.cpp
+@@ -138,6 +138,10 @@ void *QEglFSKmsIntegration::nativeResourceForIntegration(const QByteArray &name)
+     if (name == QByteArrayLiteral("dri_fd") && m_device)
+         return (void *) (qintptr) m_device->fd();
+ 
++#if QT_CONFIG(drm_atomic)
++    if (name == QByteArrayLiteral("dri_atomic_request") && m_device)
++        return (void *) (qintptr) m_device->atomic_request();
++#endif
+     return nullptr;
+ }
+ 
+-- 
+2.16.2
+

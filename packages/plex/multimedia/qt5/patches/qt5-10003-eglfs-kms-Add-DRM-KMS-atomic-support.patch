@@ -1,0 +1,356 @@
+From 56149c0fbb19946050a3249acef4e86e511d3cd4 Mon Sep 17 00:00:00 2001
+From: Lionel CHAZALLON <longchair@hotmail.com>
+Date: Sat, 24 Feb 2018 12:30:05 +0100
+Subject: [PATCH] eglfs/kms: Add DRM/KMS atomic support
+
+This commit adds support for DRM atomic to qtbase eglfs/KMS QPA when
+libdrm and device supports it.
+
+Compared To legacy DRM API, atomic API allows to update multiple planes
+in one vsync. This is the first part of some work that should follow
+and allow:
+- DRM framebuffer upscaling for embedded devices that have weaker GPUs
+- Sharing the drm atomic request if the KMSDevice so that applications
+  in userland can blend content on overlay in the same vsync loop.
+
+One of the application for DRM atomic and Qt is typically videoplayer
+integration at high resolutions (UHD) on embedded devices which cannot
+use their GPU to render such videos, but are able to render it to a drm
+overlay.
+
+Change-Id: I047adf3e3d07a53440d52c2a7073c9ed054adf34
+Reviewed-by: Oswald Buddenhagen <oswald.buddenhagen@qt.io>
+Reviewed-by: Laszlo Agocs <laszlo.agocs@qt.io>
+---
+ src/gui/configure.json                             | 25 ++++++++
+ src/platformsupport/kmsconvenience/qkmsdevice.cpp  | 69 ++++++++++++++++++++++
+ src/platformsupport/kmsconvenience/qkmsdevice_p.h  | 18 ++++++
+ .../eglfs_kms/qeglfskmsgbmscreen.cpp               | 65 +++++++++++++++-----
+ 4 files changed, 162 insertions(+), 15 deletions(-)
+
+diff --git a/qtbase/src/gui/configure.json b/qtbase/src/gui/configure.json
+index 220662ea8e..aac70a16a3 100644
+--- a/qtbase/src/gui/configure.json
++++ b/qtbase/src/gui/configure.json
+@@ -661,6 +661,26 @@
+                 "fxc.exe"
+             ]
+         },
++        "drm_atomic": {
++            "label": "DRM Atomic API",
++            "type": "compile",
++            "test": {
++                "head": [
++                    "#include <stdlib.h>",
++                    "#include <stdint.h>",
++                    "extern \"C\" {"
++                ],
++                "include": [
++                    "xf86drmMode.h",
++                    "xf86drm.h"
++                ],
++                "tail": [
++                    "}"
++                ],
++                "main": "drmModeAtomicReq *request;"
++            },
++            "use": "drm"
++        },
+         "egl-x11": {
+             "label": "EGL on X11",
+             "type": "compile",
+@@ -1010,6 +1030,11 @@
+             "condition": "libs.drm",
+             "output": [ "publicQtConfig", "privateFeature" ]
+         },
++        "drm_atomic": {
++            "label": "DRM Atomic API",
++            "condition": "libs.drm && tests.drm_atomic",
++            "output": [ "privateFeature" ]
++        },
+         "libinput": {
+             "label": "libinput",
+             "condition": "features.libudev && libs.libinput",
+diff --git a/qtbase/src/platformsupport/kmsconvenience/qkmsdevice.cpp b/qtbase/src/platformsupport/kmsconvenience/qkmsdevice.cpp
+index 59db3da776..2378856768 100644
+--- a/qtbase/src/platformsupport/kmsconvenience/qkmsdevice.cpp
++++ b/qtbase/src/platformsupport/kmsconvenience/qkmsdevice.cpp
+@@ -392,11 +392,16 @@ QPlatformScreen *QKmsDevice::createScreenForConnector(drmModeResPtr resources,
+             output.available_planes.append(plane);
+             planeListStr.append(QString::number(plane.id));
+             planeListStr.append(QLatin1Char(' '));
++            if (plane.type == QKmsPlane::PrimaryPlane)
++                output.eglfs_plane = (QKmsPlane*)&plane;
+         }
+     }
+     qCDebug(qLcKmsDebug, "Output %s can use %d planes: %s",
+             connectorName.constData(), output.available_planes.count(), qPrintable(planeListStr));
+ 
++    if (output.eglfs_plane)
++        qCDebug(qLcKmsDebug, "Output eglfs plane is: %d", output.eglfs_plane->id);
++
+     // This is for the EGLDevice/EGLStream backend. On some of those devices one
+     // may want to target a pre-configured plane. It is probably useless for
+     // eglfs_kms and others. Do not confuse with generic plane support (available_planes).
+@@ -464,6 +469,11 @@ QKmsDevice::QKmsDevice(QKmsScreenConfig *screenConfig, const QString &path)
+     : m_screenConfig(screenConfig)
+     , m_path(path)
+     , m_dri_fd(-1)
++    , m_has_atomic_support(false)
++#if QT_CONFIG(drm_atomic)
++    , m_atomic_request(nullptr)
++    , m_previous_request(nullptr)
++#endif
+     , m_crtc_allocator(0)
+ {
+     if (m_path.isEmpty()) {
+@@ -478,6 +488,9 @@ QKmsDevice::QKmsDevice(QKmsScreenConfig *screenConfig, const QString &path)
+ 
+ QKmsDevice::~QKmsDevice()
+ {
++#if QT_CONFIG(drm_atomic)
++    atomicReset();
++#endif
+ }
+ 
+ struct OrderedScreen
+@@ -522,6 +535,14 @@ void QKmsDevice::createScreens()
+ 
+     drmSetClientCap(m_dri_fd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
+ 
++#if QT_CONFIG(drm_atomic)
++    // check atomic support
++    m_has_atomic_support = !drmSetClientCap(m_dri_fd, DRM_CLIENT_CAP_ATOMIC, 1)
++                           && qEnvironmentVariableIntValue("QT_QPA_EGLFS_KMS_ATOMIC");
++    if (m_has_atomic_support)
++        qCDebug(qLcKmsDebug) << "Atomic Support found";
++#endif
++
+     drmModeResPtr resources = drmModeGetResources(m_dri_fd);
+     if (!resources) {
+         qErrnoWarning(errno, "drmModeGetResources failed");
+@@ -747,6 +768,10 @@ void QKmsDevice::discoverPlanes()
+                         plane.availableRotations |= QKmsPlane::Rotation(1 << prop->enums[i].value);
+                 }
+                 plane.rotationPropertyId = prop->prop_id;
++            } else if (!strcasecmp(prop->name, "crtc_id")) {
++                plane.crtcPropertyId = prop->prop_id;
++            } else if (!strcasecmp(prop->name, "fb_id")) {
++                plane.framebufferPropertyId = prop->prop_id;
+             }
+         });
+ 
+@@ -773,6 +798,50 @@ void QKmsDevice::setFd(int fd)
+     m_dri_fd = fd;
+ }
+ 
++
++bool QKmsDevice::hasAtomicSupport()
++{
++    return m_has_atomic_support;
++}
++
++#if QT_CONFIG(drm_atomic)
++drmModeAtomicReq * QKmsDevice::atomic_request()
++{
++    if (!m_atomic_request && m_has_atomic_support)
++        m_atomic_request = drmModeAtomicAlloc();
++
++    return m_atomic_request;
++}
++
++bool QKmsDevice::atomicCommit(void *user_data)
++{
++    if (m_atomic_request) {
++        int ret = drmModeAtomicCommit(m_dri_fd, m_atomic_request,
++                          DRM_MODE_ATOMIC_NONBLOCK | DRM_MODE_PAGE_FLIP_EVENT, user_data);
++
++        if (ret) {
++           qWarning("Failed to commit atomic request (code=%d)", ret);
++           return false;
++        }
++
++        m_previous_request = m_atomic_request;
++        m_atomic_request = nullptr;
++
++        return true;
++    }
++
++    return false;
++}
++
++void QKmsDevice::atomicReset()
++{
++    if (m_previous_request) {
++        drmModeAtomicFree(m_previous_request);
++        m_previous_request = nullptr;
++    }
++}
++#endif
++
+ QKmsScreenConfig *QKmsDevice::screenConfig() const
+ {
+     return m_screenConfig;
+diff --git a/qtbase/src/platformsupport/kmsconvenience/qkmsdevice_p.h b/qtbase/src/platformsupport/kmsconvenience/qkmsdevice_p.h
+index 5eecedec39..c7692d12ee 100644
+--- a/qtbase/src/platformsupport/kmsconvenience/qkmsdevice_p.h
++++ b/qtbase/src/platformsupport/kmsconvenience/qkmsdevice_p.h
+@@ -53,6 +53,7 @@
+ // We mean it.
+ //
+ 
++#include <QtGui/private/qtguiglobal_p.h>
+ #include <qpa/qplatformscreen.h>
+ #include <QtCore/QMap>
+ #include <QtCore/QVariant>
+@@ -166,6 +167,8 @@ struct QKmsPlane
+     Rotations initialRotation = Rotation0;
+     Rotations availableRotations = Rotation0;
+     uint32_t rotationPropertyId = 0;
++    uint32_t crtcPropertyId = 0;
++    uint32_t framebufferPropertyId = 0;
+ };
+ 
+ Q_DECLARE_OPERATORS_FOR_FLAGS(QKmsPlane::Rotations)
+@@ -191,6 +194,7 @@ struct QKmsOutput
+     uint32_t drm_format = DRM_FORMAT_XRGB8888;
+     QString clone_source;
+     QVector<QKmsPlane> available_planes;
++    struct QKmsPlane *eglfs_plane = nullptr;
+ 
+     void restoreMode(QKmsDevice *device);
+     void cleanup(QKmsDevice *device);
+@@ -215,6 +219,14 @@ public:
+     virtual void close() = 0;
+     virtual void *nativeDisplay() const = 0;
+ 
++    bool hasAtomicSupport();
++
++#if QT_CONFIG(drm_atomic)
++    bool atomicCommit(void *user_data);
++    void atomicReset();
++
++    drmModeAtomicReq *atomic_request();
++#endif
+     void createScreens();
+ 
+     int fd() const;
+@@ -248,6 +260,12 @@ protected:
+     QString m_path;
+     int m_dri_fd;
+ 
++    bool m_has_atomic_support;
++
++#if QT_CONFIG(drm_atomic)
++    drmModeAtomicReq *m_atomic_request;
++    drmModeAtomicReq *m_previous_request;
++#endif
+     quint32 m_crtc_allocator;
+ 
+     QVector<QKmsPlane> m_planes;
+diff --git a/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms/qeglfskmsgbmscreen.cpp b/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms/qeglfskmsgbmscreen.cpp
+index 4742143121..f16869c009 100644
+--- a/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms/qeglfskmsgbmscreen.cpp
++++ b/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms/qeglfskmsgbmscreen.cpp
+@@ -47,6 +47,7 @@
+ #include <QtCore/QLoggingCategory>
+ 
+ #include <QtGui/private/qguiapplication_p.h>
++#include <QtGui/private/qtguiglobal_p.h>
+ #include <QtFbSupport/private/qfbvthandler_p.h>
+ 
+ #include <errno.h>
+@@ -243,6 +244,11 @@ void QEglFSKmsGbmScreen::waitForFlip()
+         drmEvent.page_flip_handler = pageFlipHandler;
+         drmHandleEvent(device()->fd(), &drmEvent);
+     }
++
++#if QT_CONFIG(drm_atomic)
++    if (device()->hasAtomicSupport())
++        device()->atomicReset();
++#endif
+ }
+ 
+ void QEglFSKmsGbmScreen::flip()
+@@ -274,34 +280,63 @@ void QEglFSKmsGbmScreen::flip()
+     QKmsOutput &op(output());
+     const int fd = device()->fd();
+     m_flipPending = true;
+-    int ret = drmModePageFlip(fd,
++
++    if (device()->hasAtomicSupport()) {
++#if QT_CONFIG(drm_atomic)
++        drmModeAtomicReq *request = device()->atomic_request();
++        if (request) {
++            drmModeAtomicAddProperty(request, op.eglfs_plane->id, op.eglfs_plane->framebufferPropertyId, fb->fb);
++            drmModeAtomicAddProperty(request, op.eglfs_plane->id, op.eglfs_plane->crtcPropertyId, op.crtc_id);
++        }
++#endif
++    } else {
++        int ret = drmModePageFlip(fd,
+                               op.crtc_id,
+                               fb->fb,
+                               DRM_MODE_PAGE_FLIP_EVENT,
+                               this);
+-    if (ret) {
+-        qErrnoWarning("Could not queue DRM page flip on screen %s", qPrintable(name()));
+-        m_flipPending = false;
+-        gbm_surface_release_buffer(m_gbm_surface, m_gbm_bo_next);
+-        m_gbm_bo_next = nullptr;
+-        return;
++        if (ret) {
++            qErrnoWarning("Could not queue DRM page flip on screen %s", qPrintable(name()));
++            m_flipPending = false;
++            gbm_surface_release_buffer(m_gbm_surface, m_gbm_bo_next);
++            m_gbm_bo_next = nullptr;
++            return;
++        }
+     }
+ 
+     for (CloneDestination &d : m_cloneDests) {
+         if (d.screen != this) {
+             d.screen->ensureModeSet(fb->fb);
+             d.cloneFlipPending = true;
+-            int ret = drmModePageFlip(fd,
+-                                      d.screen->output().crtc_id,
+-                                      fb->fb,
+-                                      DRM_MODE_PAGE_FLIP_EVENT,
+-                                      d.screen);
+-            if (ret) {
+-                qErrnoWarning("Could not queue DRM page flip for clone screen %s", qPrintable(name()));
+-                d.cloneFlipPending = false;
++
++            if (device()->hasAtomicSupport()) {
++#if QT_CONFIG(drm_atomic)
++                drmModeAtomicReq *request = device()->atomic_request();
++                if (request) {
++                    drmModeAtomicAddProperty(request, d.screen->output().eglfs_plane->id,
++                                                      d.screen->output().eglfs_plane->framebufferPropertyId, fb->fb);
++                    drmModeAtomicAddProperty(request, d.screen->output().eglfs_plane->id,
++                                                      d.screen->output().eglfs_plane->crtcPropertyId, op.crtc_id);
++                }
++#endif
++            } else {
++                int ret = drmModePageFlip(fd,
++                                          d.screen->output().crtc_id,
++                                          fb->fb,
++                                          DRM_MODE_PAGE_FLIP_EVENT,
++                                          d.screen);
++                if (ret) {
++                    qErrnoWarning("Could not queue DRM page flip for clone screen %s", qPrintable(name()));
++                    d.cloneFlipPending = false;
++                }
+             }
+         }
+     }
++
++#if QT_CONFIG(drm_atomic)
++    if (device()->hasAtomicSupport())
++         device()->atomicCommit(this);
++#endif
+ }
+ 
+ void QEglFSKmsGbmScreen::pageFlipHandler(int fd, unsigned int sequence, unsigned int tv_sec, unsigned int tv_usec, void *user_data)
+-- 
+2.16.2
+

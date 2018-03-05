@@ -1,0 +1,164 @@
+From ddfd744d83344fe694f162baca68154c43448d21 Mon Sep 17 00:00:00 2001
+From: Lionel CHAZALLON <longchair@hotmail.com>
+Date: Thu, 8 Mar 2018 07:37:36 +0100
+Subject: [PATCH] eglfs/kms: Add framebuffer scaling ability with KMS atomic
+
+This commit will add the possibility to have a different sizes between
+framebuffer and videomode using DRM atomic, which is not possible with
+DRM legacy.
+
+The main goal of this change is to allow to get decent performance on
+embedded devices which can support high resolution display (ie UHD),
+and which don't have a GPU able to achieve decent framerate in such
+resolutions.
+
+This patch adds a "size" member to the output configuration in KMS
+configuration file. The GBM framebuffer will be created with that
+size and the GBM screen will report that size so that EGLFS can do
+everything normally.
+
+Scaling planes with different size than the video mode size is not
+something supported consistently with DRM legacy, so that feature
+will be only available when using the DRM atomic API.
+
+This was tested on Rock64 device, both with drm legacy and atomic.
+
+Change-Id: I8ba5bae35e61fcb7d9fc58234504bdfd647b43f6
+Reviewed-by: Laszlo Agocs <laszlo.agocs@qt.io>
+Reviewed-by: Lionel CHAZALLON <longchair@hotmail.com>
+---
+ src/platformsupport/kmsconvenience/qkmsdevice.cpp  | 28 ++++++++++++++++++++++
+ src/platformsupport/kmsconvenience/qkmsdevice_p.h  |  5 ++++
+ .../eglfs_kms/qeglfskmsgbmscreen.cpp               |  8 +++++++
+ .../qeglfskmsegldevicescreen.cpp                   |  2 +-
+ .../eglfs_kms_support/qeglfskmsscreen.cpp          |  5 ++--
+ 5 files changed, 44 insertions(+), 4 deletions(-)
+
+diff --git a/qtbase/src/platformsupport/kmsconvenience/qkmsdevice.cpp b/qtbase/src/platformsupport/kmsconvenience/qkmsdevice.cpp
+index 99297c8a3c..c383f51472 100644
+--- a/qtbase/src/platformsupport/kmsconvenience/qkmsdevice.cpp
++++ b/qtbase/src/platformsupport/kmsconvenience/qkmsdevice.cpp
+@@ -366,6 +366,25 @@ QPlatformScreen *QKmsDevice::createScreenForConnector(drmModeResPtr resources,
+     if (!cloneSource.isEmpty())
+         qCDebug(qLcKmsDebug) << "Output" << connectorName << " clones output " << cloneSource;
+ 
++    const QByteArray fbsize = userConnectorConfig.value(QStringLiteral("size")).toByteArray().toLower();
++    QSize framebufferSize;
++    framebufferSize.setWidth(modes[selected_mode].hdisplay);
++    framebufferSize.setHeight(modes[selected_mode].vdisplay);
++
++#if QT_CONFIG(drm_atomic)
++    if (hasAtomicSupport()) {
++        if (sscanf(fbsize.constData(), "%dx%d", &framebufferSize.rwidth(), &framebufferSize.rheight()) != 2) {
++            qWarning("Framebuffer size format is invalid.");
++        }
++    } else {
++        qWarning("Setting framebuffer size is only available with DRM atomic API");
++    }
++#else
++    if (fbsize.size())
++        qWarning("Setting framebuffer size is only available with DRM atomic API");
++#endif
++    qCDebug(qLcKmsDebug) << "Output" << connectorName << "framebuffer size is " << framebufferSize;
++
+     QKmsOutput output;
+     output.name = QString::fromUtf8(connectorName);
+     output.connector_id = connector->connector_id;
+@@ -385,6 +404,7 @@ QPlatformScreen *QKmsDevice::createScreenForConnector(drmModeResPtr resources,
+     output.forced_plane_set = false;
+     output.drm_format = drmFormat;
+     output.clone_source = cloneSource;
++    output.size = framebufferSize;
+ 
+ #if QT_CONFIG(drm_atomic)
+     if (drmModeCreatePropertyBlob(m_dri_fd, &modes[selected_mode], sizeof(drmModeModeInfo),
+@@ -788,6 +808,14 @@ void QKmsDevice::discoverPlanes()
+                 plane.crtcPropertyId = prop->prop_id;
+             } else if (!strcasecmp(prop->name, "fb_id")) {
+                 plane.framebufferPropertyId = prop->prop_id;
++            } else if (!strcasecmp(prop->name, "src_w")) {
++                plane.srcwidthPropertyId = prop->prop_id;
++            } else if (!strcasecmp(prop->name, "src_h")) {
++                plane.srcheightPropertyId = prop->prop_id;
++            } else if (!strcasecmp(prop->name, "crtc_w")) {
++                plane.crtcwidthPropertyId = prop->prop_id;
++            } else if (!strcasecmp(prop->name, "crtc_h")) {
++                plane.crtcheightPropertyId = prop->prop_id;
+             }
+         });
+ 
+diff --git a/qtbase/src/platformsupport/kmsconvenience/qkmsdevice_p.h b/qtbase/src/platformsupport/kmsconvenience/qkmsdevice_p.h
+index 2210ef479d..9737be9800 100644
+--- a/qtbase/src/platformsupport/kmsconvenience/qkmsdevice_p.h
++++ b/qtbase/src/platformsupport/kmsconvenience/qkmsdevice_p.h
+@@ -169,6 +169,10 @@ struct QKmsPlane
+     uint32_t rotationPropertyId = 0;
+     uint32_t crtcPropertyId = 0;
+     uint32_t framebufferPropertyId = 0;
++    uint32_t srcwidthPropertyId = 0;
++    uint32_t srcheightPropertyId = 0;
++    uint32_t crtcwidthPropertyId = 0;
++    uint32_t crtcheightPropertyId = 0;
+ };
+ 
+ Q_DECLARE_OPERATORS_FOR_FLAGS(QKmsPlane::Rotations)
+@@ -195,6 +199,7 @@ struct QKmsOutput
+     QString clone_source;
+     QVector<QKmsPlane> available_planes;
+     struct QKmsPlane *eglfs_plane = nullptr;
++    QSize size;
+     uint32_t crtcIdPropertyId = 0;
+     uint32_t modeIdPropertyId = 0;
+     uint32_t activePropertyId = 0;
+diff --git a/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms/qeglfskmsgbmscreen.cpp b/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms/qeglfskmsgbmscreen.cpp
+index e773e85433..679d1f0069 100644
+--- a/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms/qeglfskmsgbmscreen.cpp
++++ b/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms/qeglfskmsgbmscreen.cpp
+@@ -299,6 +299,14 @@ void QEglFSKmsGbmScreen::flip()
+         if (request) {
+             drmModeAtomicAddProperty(request, op.eglfs_plane->id, op.eglfs_plane->framebufferPropertyId, fb->fb);
+             drmModeAtomicAddProperty(request, op.eglfs_plane->id, op.eglfs_plane->crtcPropertyId, op.crtc_id);
++            drmModeAtomicAddProperty(request, op.eglfs_plane->id, op.eglfs_plane->srcwidthPropertyId,
++                                     output().size.width() << 16);
++            drmModeAtomicAddProperty(request, op.eglfs_plane->id, op.eglfs_plane->srcheightPropertyId,
++                                     output().size.height() << 16);
++            drmModeAtomicAddProperty(request, op.eglfs_plane->id, op.eglfs_plane->crtcwidthPropertyId,
++                                     m_output.modes[m_output.mode].hdisplay);
++            drmModeAtomicAddProperty(request, op.eglfs_plane->id, op.eglfs_plane->crtcheightPropertyId,
++                                     m_output.modes[m_output.mode].vdisplay);
+         }
+ #endif
+     } else {
+diff --git a/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms_egldevice/qeglfskmsegldevicescreen.cpp b/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms_egldevice/qeglfskmsegldevicescreen.cpp
+index 531b73d1dc..1626c86239 100644
+--- a/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms_egldevice/qeglfskmsegldevicescreen.cpp
++++ b/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms_egldevice/qeglfskmsegldevicescreen.cpp
+@@ -112,7 +112,7 @@ void QEglFSKmsEglDeviceScreen::waitForFlip()
+             qCDebug(qLcEglfsKmsDebug, "Setting plane %u", op.forced_plane_id);
+             int ret = drmModeSetPlane(fd, op.forced_plane_id, op.crtc_id, uint32_t(-1), 0,
+                                       0, 0, w, h,
+-                                      0 << 16, 0 << 16, w << 16, h << 16);
++                                      0 << 16, 0 << 16, op.size.width() << 16, op.size.height() << 16);
+             if (ret == -1)
+                 qErrnoWarning(errno, "drmModeSetPlane failed");
+         }
+diff --git a/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms_support/qeglfskmsscreen.cpp b/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms_support/qeglfskmsscreen.cpp
+index 5e45b42abe..e5354d97bd 100644
+--- a/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms_support/qeglfskmsscreen.cpp
++++ b/qtbase/src/plugins/platforms/eglfs/deviceintegration/eglfs_kms_support/qeglfskmsscreen.cpp
+@@ -113,10 +113,9 @@ QRect QEglFSKmsScreen::rawGeometry() const
+     if (m_headless)
+         return QRect(QPoint(0, 0), m_device->screenConfig()->headlessSize());
+ 
+-    const int mode = m_output.mode;
+     return QRect(m_pos.x(), m_pos.y(),
+-                 m_output.modes[mode].hdisplay,
+-                 m_output.modes[mode].vdisplay);
++                 m_output.size.width(),
++                 m_output.size.height());
+ }
+ 
+ int QEglFSKmsScreen::depth() const
+-- 
+2.16.2
+
