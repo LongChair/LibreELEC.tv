@@ -30,9 +30,7 @@ PKG_PRIORITY="optional"
 PKG_SECTION="mediacenter"
 PKG_SHORTDESC="Plex Media Player"
 PKG_LONGDESC="Plex is the king or PC clients for Plex :P"
-
-PKG_IS_ADDON="no"
-PKG_AUTORECONF="no"
+PKG_TOOLCHAIN="cmake"
 
 # Add eventual X11 additionnal deps
 if [ "$DISPLAYSERVER" = "x11" ]; then
@@ -106,18 +104,10 @@ pre_make_target()
   # Build the cmake toolchain file
   cp  $PKG_DIR/toolchain.cmake $PKG_BUILD/
   sed -e "s%@SYSROOT_PREFIX@%$SYSROOT_PREFIX%g" \
-      -e "s%@TARGET_PREFIX@%$TARGET_PREFIX%g" \
-      -e "s%@PKG_BUILD_DIR@%$PKG_BUILD%g" \
-      -e "s%@TARGET_CFLAGS@%$TARGET_CFLAGS%g" \
-      -e "s%@TARGET_CXXFLAGS@%$TARGET_CXXFLAGS%g" \
-      -e "s%@TARGET_LDFLAGS@%$TARGET_LDFLAGS%g" \
-      -e "s%@MAKEFLAGS@%$MAKEFLAGS%g" \
       -e "s%@BUILD_TARGET@%$PMP_BUILD_TARGET%g" \
       -e "s%@COD_OPTIONS_ENABLE@%$COD_OPTIONS_ENABLE%g" \
       -e "s%@COD_OPTIONS_DEPFOLDER@%$COD_OPTIONS_DEPFOLDER%g" \
       -e "s%@COD_DISABLE_BUNDLE_DEPS@%$COD_DISABLE_BUNDLE_DEPS%g" \
-      -e "s%@COD_OE_ARCH@%${PLEX_CODEC_ARCH}%g" \
-      -e "s%@BUILD_TARGET@%${PMP_BUILD_TARGET}%g" \
       -i $PKG_BUILD/toolchain.cmake
 }
 
