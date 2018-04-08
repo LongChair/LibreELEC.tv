@@ -161,6 +161,21 @@ makeinstall_target() {
     ;;
   esac
 
+  #copy device specific qt configuration
+  if [ -d "${PKG_DIR}/mkspecs/${PROJECT}" ]; then
+    
+    mkdir -p $INSTALL/etc/profile.d/
+
+    if [ -f "${PKG_DIR}/mkspecs/${PROJECT}/${DEVICE}/qt5-device.conf" ]; then
+       cp -R ${PKG_DIR}/mkspecs/${PROJECT}/${DEVICE}/qt5-device.conf $INSTALL/etc/profile.d/
+    else
+      if [ -f "${PKG_DIR}/mkspecs/${PROJECT}/qt5-device.conf" ]; then
+        cp -R ${PKG_DIR}/mkspecs/${PROJECT}/qt5-device.conf $INSTALL/etc/profile.d/
+      fi
+    fi
+  fi 
+
+  
   #restore strip value
   STRIP=$BACKUP_STRIP
   debug_strip ${INSTALL}/usr/local/qt5/
