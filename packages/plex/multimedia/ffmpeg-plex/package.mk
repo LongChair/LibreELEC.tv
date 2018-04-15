@@ -108,12 +108,6 @@ esac
 pre_configure_target() {
   cd $PKG_BUILD
   rm -rf .$TARGET_NAME
-
-# ffmpeg fails building with LTO support
-  strip_lto
-
-# ffmpeg fails running with GOLD support
-  strip_gold
 }
 
 configure_target() {

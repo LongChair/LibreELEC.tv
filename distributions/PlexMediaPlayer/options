@@ -197,6 +197,9 @@
 # Default system partition offset, in sectors, eg. 2048
   SYSTEM_PART_START=2048
 
+# Default supported get handlers (archive, git, file etc.)
+  GET_HANDLER_SUPPORT="archive"
+
 # Plex extra dependencies
 DISTRO_DEPS="pip"
 DISTRO_DEPS_PKG="python-pip"

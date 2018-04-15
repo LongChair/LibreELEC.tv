@@ -79,9 +79,6 @@ PKG_CMAKE_OPTS_TARGET="-DCMAKE_INSTALL_PREFIX=/usr \
 		       -DCRASHDUMP_SECRET=${CI_CRASHDUMP_SECRET}\
 		       -DCMAKE_NO_SYSTEM_FROM_IMPORTED=TRUE"
 
-#we don't want lto
-strip_lto
-
 unpack() {
   if [ -d $BUILD/${PKG_NAME}-${PKG_VERSION} ]; then
     cd $BUILD/${PKG_NAME}-${PKG_VERSION} ; rm -rf build
